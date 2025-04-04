@@ -1,7 +1,7 @@
 #visualisation.py
 import matplotlib.pyplot as plt
 
-def plot_results(susceptible, infected, recovered, save_path=None):
+def plot_results(susceptible, infected, recovered, deaths=None, save_path=None):
     """
     Функція для візуалізації результатів симуляції
     """
@@ -14,6 +14,9 @@ def plot_results(susceptible, infected, recovered, save_path=None):
     ax.plot(days, susceptible, label='Сприйнятливі', color='blue')
     ax.plot(days, infected, label='Заражені', color='red')
     ax.plot(days, recovered, label='Одужавші', color='green')
+
+    if deaths is not None:
+        ax.plot(days, deaths, label='Смерті', color='black')
 
     ax.set_title("Симуляція поширення вірусу")
     ax.set_xlabel("Дні")

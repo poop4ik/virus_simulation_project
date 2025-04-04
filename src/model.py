@@ -1,58 +1,76 @@
-#model.py
 import numpy as np
 
 class Population:
-    def __init__(self, total_population):
+    def __init__(self, total_population, children_percent, young_adults_percent, middle_age_percent, senior_percent):
         self.total_population = total_population
         
-        # Початкові значення для кожної групи
-        self.male_percentage = 0.5  # 50% чоловіків
-        self.female_percentage = 0.5  # 50% жінок
-        
-        # Вікові групи
-        self.children_percentage = 0.2  # 20% дітей (0-14 років)
-        self.young_adults_percentage = 0.3  # 30% молодих людей (15-34 роки)
-        self.middle_age_percentage = 0.3  # 30% середнього віку (35-64 роки)
-        self.senior_percentage = 0.2  # 20% похилого віку (65+ років)
-        
-        # Рахуємо кількість людей у кожній групі
-        self.males = self.total_population * self.male_percentage
-        self.females = self.total_population * self.female_percentage
-        self.children = self.total_population * self.children_percentage
-        self.young_adults = self.total_population * self.young_adults_percentage
-        self.middle_aged = self.total_population * self.middle_age_percentage
-        self.senior = self.total_population * self.senior_percentage
+        # Обчислюємо чисельність кожної вікової групи на основі відсотків
+        self.children = int(total_population * children_percent)
+        self.young_adults = int(total_population * young_adults_percent)
+        self.middle_aged = int(total_population * middle_age_percent)
+        self.senior = int(total_population * senior_percent)
 
-    def get_group_data(self):
-        return {
-            "Males": self.males,
-            "Females": self.females,
-            "Children": self.children,
-            "Young Adults": self.young_adults,
-            "Middle Aged": self.middle_aged,
-            "Senior": self.senior
+        # Створюємо словник з детальною інформацією
+        self.group_data = {
+            "Children": {
+                "count": self.children,
+                "percentage": children_percent
+            },
+            "Young Adults": {
+                "count": self.young_adults,
+                "percentage": young_adults_percent
+            },
+            "Middle Aged": {
+                "count": self.middle_aged,
+                "percentage": middle_age_percent
+            },
+            "Senior": {
+                "count": self.senior,
+                "percentage": senior_percent
+            }
         }
 
+    def get_group_data(self):
+        return self.group_data
 
-def run_sir_model(population, beta, gamma, days):
-    susceptible = population.total_population - 1  # Використовуємо атрибут total_population
-    infected = 1  # Початкова кількість інфікованих
-    recovered = 0  # Початкова кількість одужавших
+    def get_total_population(self):
+        return self.total_population
 
-    susceptible_list = [susceptible]
-    infected_list = [infected]
-    recovered_list = [recovered]
 
-    for day in range(1, days + 1):
-        new_infected = beta * susceptible * infected / population.total_population
-        new_recovered = gamma * infected
+def run_sir_model(population_obj, beta, gamma, days,
+                  death_rate_children, death_rate_young_adults, death_rate_middle_age, death_rate_senior):
+    """
+    Модель поширення вірусу з урахуванням вакцинації та карантину.
+    """
 
-        susceptible -= new_infected
-        infected += new_infected - new_recovered
-        recovered += new_recovered
+    population = population_obj.total_population
 
-        susceptible_list.append(susceptible)
-        infected_list.append(infected)
-        recovered_list.append(recovered)
+    # Ініціалізація масивів для збереження результатів
+    susceptible = np.zeros(days)
+    infected = np.zeros(days)
+    recovered = np.zeros(days)
+    deaths = np.zeros(days)
 
-    return susceptible_list, infected_list, recovered_list
+    # Початкові значення
+    susceptible[0] = population - 1
+    infected[0] = 1
+    recovered[0] = 0
+
+    # Симуляція
+    for day in range(1, days):
+        new_infected = beta * susceptible[day - 1] * infected[day - 1] / population
+        new_recovered = gamma * infected[day - 1]
+
+        susceptible[day] = susceptible[day - 1] - new_infected
+        infected[day] = infected[day - 1] + new_infected - new_recovered
+        recovered[day] = recovered[day - 1] + new_recovered
+
+        # Додаємо смертність для кожної вікової групи
+        deaths[day] = (
+            death_rate_children * population_obj.children * infected[day] / population +
+            death_rate_young_adults * population_obj.young_adults * infected[day] / population +
+            death_rate_middle_age * population_obj.middle_aged * infected[day] / population +
+            death_rate_senior * population_obj.senior * infected[day] / population
+        )
+
+    return susceptible, infected, recovered, deaths
