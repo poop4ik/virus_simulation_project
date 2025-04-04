@@ -1,14 +1,7 @@
+#model.py
 import numpy as np
 
 def run_sir_model(population, beta, gamma, days):
-    """
-    Функція для запуску моделі SIR
-    population: загальна кількість людей
-    beta: ймовірність зараження
-    gamma: ймовірність одужання
-    days: кількість днів для симуляції
-    """
-
     # Ініціалізація початкових значень
     susceptible = population - 1
     infected = 1

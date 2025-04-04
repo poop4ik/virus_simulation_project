@@ -1,3 +1,4 @@
+#simulation.py
 from mpi4py import MPI
 from model import run_sir_model
 import numpy as np
