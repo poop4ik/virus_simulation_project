@@ -1,32 +1,20 @@
-#visualisation.py
+import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_results(susceptible, infected, recovered, deaths=None, save_path=None):
-    """
-    Функція для візуалізації результатів симуляції
-    """
-    days = range(len(susceptible))
+def plot_results(susceptible, infected, recovered, dead):
+    days = range(len(susceptible))  # Припускаємо, що всі масиви однакової довжини
 
-    fig, ax = plt.subplots(figsize=(10, 6))
-    fig.patch.set_facecolor("#f4f4f4")  # Змінюємо фон усієї фігури
-    ax.set_facecolor("#f4f4f4")  # Змінюємо фон області графіка
+    plt.figure(figsize=(10, 6))
 
-    ax.plot(days, susceptible, label='Сприйнятливі', color='blue')
-    ax.plot(days, infected, label='Заражені', color='red')
-    ax.plot(days, recovered, label='Одужавші', color='green')
+    plt.plot(days, susceptible, label='Susceptible', color='blue')
+    plt.plot(days, infected, label='Infected', color='red')
+    plt.plot(days, recovered, label='Recovered', color='green')
+    plt.plot(days, dead, label='Dead', color='black')
 
-    if deaths is not None:
-        ax.plot(days, deaths, label='Смерті', color='black')
+    plt.xlabel('Days')
+    plt.ylabel('Population')
+    plt.title('Epidemic Simulation Results')
+    plt.legend()
+    plt.grid(True)
 
-    ax.set_title("Симуляція поширення вірусу")
-    ax.set_xlabel("Дні")
-    ax.set_ylabel("Кількість людей")
-    ax.legend()
-    ax.grid(True)
-
-    if save_path:
-        plt.savefig(save_path, facecolor=fig.get_facecolor())  # Зберігаємо з урахуванням фону
-    else:
-        plt.show()
-
-    plt.close()
+    plt.show()

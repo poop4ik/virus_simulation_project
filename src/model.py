@@ -1,76 +1,106 @@
 import numpy as np
 
 class Population:
-    def __init__(self, total_population, children_percent, young_adults_percent, middle_age_percent, senior_percent):
+    def __init__(self, total_population, children_percentage, young_adults_percentage, 
+                 middle_age_percentage, senior_percentage,
+                 death_rate_children, death_rate_young_adults, death_rate_middle_age, death_rate_senior,
+                 male_percent, female_percent):
         self.total_population = total_population
-        
-        # Обчислюємо чисельність кожної вікової групи на основі відсотків
-        self.children = int(total_population * children_percent)
-        self.young_adults = int(total_population * young_adults_percent)
-        self.middle_aged = int(total_population * middle_age_percent)
-        self.senior = int(total_population * senior_percent)
+        self.male_percent = male_percent
+        self.female_percent = female_percent
 
-        # Створюємо словник з детальною інформацією
-        self.group_data = {
+        # Дані для кожної вікової групи
+        self.groups = {
             "Children": {
-                "count": self.children,
-                "percentage": children_percent
+                "percentage": children_percentage,
+                "total": int(total_population * children_percentage / 100),
+                "mortality_rate": death_rate_children,
+                "susceptible": int(total_population * children_percentage / 100),
+                "infected": 0,
+                "recovered": 0,
+                "dead": 0
             },
             "Young Adults": {
-                "count": self.young_adults,
-                "percentage": young_adults_percent
+                "percentage": young_adults_percentage,
+                "total": int(total_population * young_adults_percentage / 100),
+                "mortality_rate": death_rate_young_adults,
+                "susceptible": int(total_population * young_adults_percentage / 100),
+                "infected": 0,
+                "recovered": 0,
+                "dead": 0
             },
             "Middle Aged": {
-                "count": self.middle_aged,
-                "percentage": middle_age_percent
+                "percentage": middle_age_percentage,
+                "total": int(total_population * middle_age_percentage / 100),
+                "mortality_rate": death_rate_middle_age,
+                "susceptible": int(total_population * middle_age_percentage / 100),
+                "infected": 0,
+                "recovered": 0,
+                "dead": 0
             },
             "Senior": {
-                "count": self.senior,
-                "percentage": senior_percent
+                "percentage": senior_percentage,
+                "total": int(total_population * senior_percentage / 100),
+                "mortality_rate": death_rate_senior,
+                "susceptible": int(total_population * senior_percentage / 100),
+                "infected": 0,
+                "recovered": 0,
+                "dead": 0
             }
         }
+        # Початкове зараження: по одному зараженому в кожній групі
+        for group in self.groups:
+            if self.groups[group]["susceptible"] > 0:
+                self.groups[group]["infected"] = 1
+                self.groups[group]["susceptible"] -= 1
 
-    def get_group_data(self):
-        return self.group_data
+    def simulate_day(self, beta, gamma, vaccine_percent, vaccine_infection_reduction, vaccine_mortality_reduction,
+                     quarantine_percent, quarantine_infection_reduction, quarantine_mortality_reduction):
+        local_results = {}
+        for group, data in self.groups.items():
+            s = data["susceptible"]
+            i = data["infected"]
+            r = data["recovered"]
+            d = data["dead"]
+            total = data["total"]
+            mortality_rate = data["mortality_rate"]
+    
+            # Розрахунок нових заражень, одужань і смертей
+            new_infected = beta * s * i / total if total > 0 else 0
+            new_recovered = gamma * i
+            new_dead = (mortality_rate / 100) * i
+    
+            s_new = s - new_infected
+            i_new = i + new_infected - new_recovered - new_dead
+            r_new = r + new_recovered
+            d_new = d + new_dead
+    
+            local_results[group] = {
+                "susceptible": s_new,
+                "infected": i_new,
+                "recovered": r_new,
+                "dead": d_new
+            }
+    
+            # Оновлення даних групи для наступного дня
+            self.groups[group]["susceptible"] = s_new
+            self.groups[group]["infected"] = i_new
+            self.groups[group]["recovered"] = r_new
+            self.groups[group]["dead"] = d_new
+    
+        return local_results
+    
 
-    def get_total_population(self):
-        return self.total_population
+    def calculate_effectiveness(self, vaccine_percent, quarantine_percent,
+                                vaccine_infection_reduction, vaccine_mortality_reduction,
+                                quarantine_infection_reduction, quarantine_mortality_reduction):
+        v_coverage = vaccine_percent / 100
+        q_coverage = quarantine_percent / 100
 
+        vaccine_inf_reduction = round(vaccine_infection_reduction * v_coverage, 2)
+        vaccine_mort_reduction = round(vaccine_mortality_reduction * v_coverage, 2)
 
-def run_sir_model(population_obj, beta, gamma, days,
-                  death_rate_children, death_rate_young_adults, death_rate_middle_age, death_rate_senior):
-    """
-    Модель поширення вірусу з урахуванням вакцинації та карантину.
-    """
+        quarantine_inf_reduction = round(quarantine_infection_reduction * q_coverage, 2)
+        quarantine_mort_reduction = round(quarantine_mortality_reduction * q_coverage, 2)
 
-    population = population_obj.total_population
-
-    # Ініціалізація масивів для збереження результатів
-    susceptible = np.zeros(days)
-    infected = np.zeros(days)
-    recovered = np.zeros(days)
-    deaths = np.zeros(days)
-
-    # Початкові значення
-    susceptible[0] = population - 1
-    infected[0] = 1
-    recovered[0] = 0
-
-    # Симуляція
-    for day in range(1, days):
-        new_infected = beta * susceptible[day - 1] * infected[day - 1] / population
-        new_recovered = gamma * infected[day - 1]
-
-        susceptible[day] = susceptible[day - 1] - new_infected
-        infected[day] = infected[day - 1] + new_infected - new_recovered
-        recovered[day] = recovered[day - 1] + new_recovered
-
-        # Додаємо смертність для кожної вікової групи
-        deaths[day] = (
-            death_rate_children * population_obj.children * infected[day] / population +
-            death_rate_young_adults * population_obj.young_adults * infected[day] / population +
-            death_rate_middle_age * population_obj.middle_aged * infected[day] / population +
-            death_rate_senior * population_obj.senior * infected[day] / population
-        )
-
-    return susceptible, infected, recovered, deaths
+        return vaccine_inf_reduction, vaccine_mort_reduction, quarantine_inf_reduction, quarantine_mort_reduction

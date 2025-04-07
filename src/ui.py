@@ -83,29 +83,6 @@ class SimulationApp:
         self.root.geometry("400x250")
         self.center_window(self.root, 400, 250)
 
-
-    def get_population_input(self):
-        # Запитуємо у користувача загальні параметри популяції
-        total_population_value = int(self.population_entry.get())
-
-        children_percentage = float(self.children_entry.get()) / 100
-        young_adults_percentage = float(self.young_adults_entry.get()) / 100
-        middle_age_percentage = float(self.middle_age_entry.get()) / 100
-        senior_percentage = float(self.senior_entry.get()) / 100
-
-        # Переконуємося, що сума відсотків вікових груп дорівнює 1.0
-        if not (0.99 <= children_percentage + young_adults_percentage + middle_age_percentage + senior_percentage <= 1.01):
-            raise ValueError("Сума відсотків вікових груп має дорівнювати 100%")
-
-        # Створюємо клас Population із переданими значеннями
-        population = Population(total_population_value, 
-                                children_percentage, 
-                                young_adults_percentage, 
-                                middle_age_percentage, 
-                                senior_percentage)
-
-        return population
-
     def load_parameters(self):
         file_path = filedialog.askopenfilename(title="Виберіть файл з параметрами", filetypes=[("Text files", "*.txt")])
 
@@ -161,11 +138,11 @@ class SimulationApp:
     
         # Додаємо нові поля для введення статі та вікових груп
         self.create_label(settings_frame, "Відсоток чоловіків:")
-        self.male_entry = self.create_entry(settings_frame, "50")
+        self.male_entry = self.create_entry(settings_frame, "60")
         self.male_entry.grid(row=2, column=1, padx=10, pady=5)
 
         self.create_label(settings_frame, "Відсоток жінок:")
-        self.female_entry = self.create_entry(settings_frame, "50")
+        self.female_entry = self.create_entry(settings_frame, "40")
         self.female_entry.grid(row=3, column=1, padx=10, pady=5)
 
         self.create_label(settings_frame, "Відсоток дітей (0-14 років):")
@@ -199,27 +176,27 @@ class SimulationApp:
 
         # Додаємо нові поля для коефіцієнтів летальності для кожної групи
         self.create_label(settings_frame, "Летальність дітей (%):")
-        self.death_rate_children_entry = self.create_entry(settings_frame, "0.1")  # Значення за замовчуванням
+        self.death_rate_children_entry = self.create_entry(settings_frame, "10")  # Значення за замовчуванням
         self.death_rate_children_entry.grid(row=11, column=1, padx=10, pady=5)
 
-        self.create_label(settings_frame, "Коеф. летальності для молодих людей:")
-        self.death_rate_young_adults_entry = self.create_entry(settings_frame, "0.02")
+        self.create_label(settings_frame, "Летальності для молодих людей:")
+        self.death_rate_young_adults_entry = self.create_entry(settings_frame, "10")
         self.death_rate_young_adults_entry.grid(row=12, column=1, padx=10, pady=5)
 
-        self.create_label(settings_frame, "Коеф. летальності для середнього віку:")
-        self.death_rate_middle_age_entry = self.create_entry(settings_frame, "0.05")
+        self.create_label(settings_frame, "Летальність для середнього віку:")
+        self.death_rate_middle_age_entry = self.create_entry(settings_frame, "5")
         self.death_rate_middle_age_entry.grid(row=13, column=1, padx=10, pady=5)
 
-        self.create_label(settings_frame, "Коеф. летальності для похилого віку:")
-        self.death_rate_senior_entry = self.create_entry(settings_frame, "0.1")
+        self.create_label(settings_frame, "Летальність летальності для похилого віку:")
+        self.death_rate_senior_entry = self.create_entry(settings_frame, "5")
         self.death_rate_senior_entry.grid(row=14, column=1, padx=10, pady=5)
 
         self.create_label(settings_frame, "Вакцинація (%)")
-        self.vaccine_percent_entry =self.create_entry(settings_frame, "0")
+        self.vaccine_percent_entry =self.create_entry(settings_frame, "70")
         self.vaccine_percent_entry.grid(row=15, column=1, padx=10, pady=5)
 
         self.create_label(settings_frame, "Карантин (%)")
-        self.quarantine_percent_entry = self.create_entry(settings_frame, "0")
+        self.quarantine_percent_entry = self.create_entry(settings_frame, "20")
         self.quarantine_percent_entry.grid(row=16, column=1, padx=10, pady=5)
 
         # Додаємо поля для зниження інфікування та смертності через вакцинацію та карантин
@@ -238,8 +215,6 @@ class SimulationApp:
         self.create_label(settings_frame, "Зниження смертності карантином (%):")
         self.quarantine_mortality_reduction_entry = self.create_entry(settings_frame, "30")
         self.quarantine_mortality_reduction_entry.grid(row=20, column=1, padx=10, pady=5)
-
-
 
         # Використовуємо grid для кнопок
         self.create_button(self.root, "Запустити симуляцію", self.run_simulation).grid(row=21, column=0, padx=10, pady=5, sticky="nsew")
@@ -275,94 +250,70 @@ class SimulationApp:
     
 
     def run_simulation(self):
+        # Отримуємо ім'я експерименту
         experiment_name = self.experiment_name_entry.get()
 
-        # Отримуємо популяцію через функцію get_population_input
-        population = self.get_population_input()
+        # Отримуємо загальну кількість людей
+        total_population = int(self.population_entry.get())
 
-        # Інші параметри
-        beta = float(self.beta_entry.get())
-        gamma = float(self.gamma_entry.get())
-        days = int(self.days_entry.get())
+        # Отримуємо відсотки за статтю
+        male_percent = float(self.male_entry.get())
+        female_percent = float(self.female_entry.get())
 
         # Отримуємо відсотки вікових груп
-        children_percent = population.group_data['Children']['percentage']
-        young_adults_percent = population.group_data['Young Adults']['percentage']
-        middle_age_percent = population.group_data['Middle Aged']['percentage']
-        senior_percent = population.group_data['Senior']['percentage']
+        children_percentage = float(self.children_entry.get())
+        young_adults_percentage = float(self.young_adults_entry.get())
+        middle_age_percentage = float(self.middle_age_entry.get())
+        senior_percentage = float(self.senior_entry.get())
 
-        # Отримуємо коефіцієнти летальності
-        death_rate_children = float(self.death_rate_children_entry.get()) / 100
-        death_rate_young_adults = float(self.death_rate_young_adults_entry.get()) / 100
-        death_rate_middle_age = float(self.death_rate_middle_age_entry.get()) / 100
-        death_rate_senior = float(self.death_rate_senior_entry.get()) / 100
+        # Отримуємо коефіцієнти зараження та одужання
+        beta = float(self.beta_entry.get())
+        gamma = float(self.gamma_entry.get())
 
-        # Перевірка на вакцінацію та карантин
-        vaccination_value = float(self.vaccine_percent_entry.get()) / 100
-        quarantine_value = float(self.quarantine_percent_entry.get()) / 100
+        # Отримуємо кількість днів симуляції
+        days = int(self.days_entry.get())
 
-        # Отримуємо зниження інфікування та смертності через вакцинацію та карантин
-        vaccine_infection_reduction = float(self.vaccine_infection_reduction_entry.get()) / 100
-        vaccine_mortality_reduction = float(self.vaccine_mortality_reduction_entry.get()) / 100
-        quarantine_infection_reduction = float(self.quarantine_infection_reduction_entry.get()) / 100
-        quarantine_mortality_reduction = float(self.quarantine_mortality_reduction_entry.get()) / 100
+        # Отримуємо коефіцієнти летальності для кожної вікової групи
+        death_rate_children = float(self.death_rate_children_entry.get())
+        death_rate_young_adults = float(self.death_rate_young_adults_entry.get())
+        death_rate_middle_age = float(self.death_rate_middle_age_entry.get())
+        death_rate_senior = float(self.death_rate_senior_entry.get())
 
-        # Виконуємо симуляцію та зберігаємо результати
-        self.susceptible, self.infected, self.recovered, self.deaths, self.total_mortality, \
-        self.children_mortality, self.young_adults_mortality, self.middle_age_mortality, self.senior_mortality, \
-        self.vaccination_impact, self.vaccination_mortality_impact, self.quarantine_impact, self.quarantine_mortality_impact = parallel_simulation(
-            population_obj=population,
-            beta=beta,
-            gamma=gamma,
-            days=days,
-            children_percent=children_percent, 
-            young_adults_percent=young_adults_percent, 
-            middle_age_percent=middle_age_percent,  
-            senior_percent=senior_percent,  
-            death_rate_children=death_rate_children,
-            death_rate_young_adults=death_rate_young_adults,
-            death_rate_middle_age=death_rate_middle_age,
-            death_rate_senior=death_rate_senior,
-            vaccination=vaccination_value,
-            quarantine=quarantine_value,
-            vaccine_infection_reduction=vaccine_infection_reduction,
-            vaccine_mortality_reduction=vaccine_mortality_reduction,
-            quarantine_infection_reduction=quarantine_infection_reduction,
-            quarantine_mortality_reduction=quarantine_mortality_reduction,
-            num_processes=4
+        # Отримуємо дані щодо вакцинації та карантину
+        vaccine_percent = float(self.vaccine_percent_entry.get())
+        quarantine_percent = float(self.quarantine_percent_entry.get())
+        vaccine_infection_reduction = float(self.vaccine_infection_reduction_entry.get())
+        vaccine_mortality_reduction = float(self.vaccine_mortality_reduction_entry.get())
+        quarantine_infection_reduction = float(self.quarantine_infection_reduction_entry.get())
+        quarantine_mortality_reduction = float(self.quarantine_mortality_reduction_entry.get())
+
+        # Створюємо об'єкт популяції із заданими параметрами
+        population = Population(
+            total_population, children_percentage, young_adults_percentage, middle_age_percentage, senior_percentage,
+            death_rate_children, death_rate_young_adults, death_rate_middle_age, death_rate_senior,
+            male_percent, female_percent
         )
-    
-        # Проводимо візуалізацію результатів
-        plot_results(self.susceptible, self.infected, self.recovered, self.deaths, save_path=TEMP_GRAPH_PATH)
-        
-        # Розрахунок додаткових показників
-        self.max_infected = np.max(self.infected)
-        self.max_infected_day = np.argmax(self.infected)
-        self.total_infected = np.sum(self.infected)
-        self.total_deaths = np.sum(self.deaths)
-        
-        self.results_saved = False
-        messagebox.showinfo("Готово", "Симуляція завершена. Перегляньте результати.")
 
-    
+        susceptible, infected, recovered, dead = parallel_simulation(
+            population, beta, gamma, days, 4, 
+            vaccine_percent, vaccine_infection_reduction, vaccine_mortality_reduction,
+            quarantine_percent, quarantine_infection_reduction, quarantine_mortality_reduction
+        )
+
+        # Вивід результатів у консоль
+        print("Experiment:", experiment_name)
+        print("Simulation finished. Results saved.")
+
+        # Імпорт функції для побудови графіку та передача даних
+        from visualisation import plot_results
+        plot_results(susceptible, infected, recovered, dead)
+
+   
     def show_results(self):
         if not os.path.exists(TEMP_GRAPH_PATH):
             messagebox.showerror("Помилка", "Немає збережених результатів!")
-            return
+            returnн
 
-        result_window = Toplevel(self.root)
-        result_window.title("Результати симуляції")
-        result_window.config(bg="#f4f4f4")
-        self.center_window(result_window, 1000, 850)
-
-        # Розміщення заголовка
-        self.create_label(result_window, "Результати симуляції:", 14)
-
-        # Розміщення зображення
-        img = tk.PhotoImage(file=TEMP_GRAPH_PATH)
-        img_label = Label(result_window, image=img)
-        img_label.image = img
-        img_label.grid(row=1, column=0, padx=10, pady=10)
 
         # Отримуємо результат симуляції
         population_obj = self.get_population_input()  # Отримуємо об'єкт популяції (populatio_obj)
@@ -403,6 +354,23 @@ class SimulationApp:
         final_susceptible, final_infected, final_recovered, final_deaths, total_mortality, children_mortality, \
         young_adults_mortality, middle_age_mortality, senior_mortality, vaccination_impact, vaccination_mortality_impact, \
         quarantine_impact, quarantine_mortality_impact = results
+
+        # Проводимо візуалізацію результатів
+        plot_results(final_susceptible, final_infected, final_recovered, final_deaths, save_path=TEMP_GRAPH_PATH)
+
+        result_window = Toplevel(self.root)
+        result_window.title("Результати симуляції")
+        result_window.config(bg="#f4f4f4")
+        self.center_window(result_window, 1000, 850)
+
+        # Розміщення заголовка
+        self.create_label(result_window, "Результати симуляції:", 14)
+
+        # Розміщення зображення
+        img = tk.PhotoImage(file=TEMP_GRAPH_PATH)
+        img_label = Label(result_window, image=img)
+        img_label.image = img
+        img_label.grid(row=1, column=0, padx=10, pady=10)
 
         # Формуємо текстові результати
         text_result = f"Experiment: {self.experiment_name_entry.get()}\n"
