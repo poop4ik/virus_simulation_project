@@ -13,7 +13,7 @@ def start_simulation(population, beta, gamma, days):
     """
     Запуск симуляції з параметрами
     """
-    num_processes = 4  # Кількість процесів для MPI
+    num_processes = 8  # Кількість процесів для MPI
 
     susceptible, infected, recovered = parallel_simulation(population, beta, gamma, days, num_processes)
     plot_results(susceptible, infected, recovered)

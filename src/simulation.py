@@ -73,3 +73,4 @@ def parallel_simulation(population_obj, beta, gamma, days, children_percent, you
         return final_susceptible, final_infected, final_recovered, final_deaths, total_mortality, \
                children_mortality, young_adults_mortality, middle_age_mortality, senior_mortality, \
                vaccination_impact, vaccination_mortality_impact, quarantine_impact, quarantine_mortality_impact
+    

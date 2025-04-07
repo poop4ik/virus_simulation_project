@@ -276,37 +276,38 @@ class SimulationApp:
 
     def run_simulation(self):
         experiment_name = self.experiment_name_entry.get()
-    
+
         # Отримуємо популяцію через функцію get_population_input
         population = self.get_population_input()
-    
+
+        # Інші параметри
         beta = float(self.beta_entry.get())
         gamma = float(self.gamma_entry.get())
         days = int(self.days_entry.get())
-    
+
         # Отримуємо відсотки вікових груп
         children_percent = population.group_data['Children']['percentage']
         young_adults_percent = population.group_data['Young Adults']['percentage']
         middle_age_percent = population.group_data['Middle Aged']['percentage']
         senior_percent = population.group_data['Senior']['percentage']
-    
+
         # Отримуємо коефіцієнти летальності
         death_rate_children = float(self.death_rate_children_entry.get()) / 100
         death_rate_young_adults = float(self.death_rate_young_adults_entry.get()) / 100
         death_rate_middle_age = float(self.death_rate_middle_age_entry.get()) / 100
         death_rate_senior = float(self.death_rate_senior_entry.get()) / 100
-    
+
         # Перевірка на вакцінацію та карантин
         vaccination_value = float(self.vaccine_percent_entry.get()) / 100
         quarantine_value = float(self.quarantine_percent_entry.get()) / 100
-    
+
         # Отримуємо зниження інфікування та смертності через вакцинацію та карантин
         vaccine_infection_reduction = float(self.vaccine_infection_reduction_entry.get()) / 100
         vaccine_mortality_reduction = float(self.vaccine_mortality_reduction_entry.get()) / 100
         quarantine_infection_reduction = float(self.quarantine_infection_reduction_entry.get()) / 100
         quarantine_mortality_reduction = float(self.quarantine_mortality_reduction_entry.get()) / 100
-    
-        # Передаємо ці значення в parallel_simulation
+
+        # Виконуємо симуляцію та зберігаємо результати
         self.susceptible, self.infected, self.recovered, self.deaths, self.total_mortality, \
         self.children_mortality, self.young_adults_mortality, self.middle_age_mortality, self.senior_mortality, \
         self.vaccination_impact, self.vaccination_mortality_impact, self.quarantine_impact, self.quarantine_mortality_impact = parallel_simulation(
@@ -331,15 +332,18 @@ class SimulationApp:
             num_processes=4
         )
     
+        # Проводимо візуалізацію результатів
         plot_results(self.susceptible, self.infected, self.recovered, self.deaths, save_path=TEMP_GRAPH_PATH)
-    
+        
+        # Розрахунок додаткових показників
         self.max_infected = np.max(self.infected)
         self.max_infected_day = np.argmax(self.infected)
         self.total_infected = np.sum(self.infected)
         self.total_deaths = np.sum(self.deaths)
-    
+        
         self.results_saved = False
         messagebox.showinfo("Готово", "Симуляція завершена. Перегляньте результати.")
+
     
     def show_results(self):
         if not os.path.exists(TEMP_GRAPH_PATH):
@@ -366,6 +370,13 @@ class SimulationApp:
         vaccination_value = float(self.vaccine_percent_entry.get()) 
         quarantine_value = float(self.quarantine_percent_entry.get())
 
+        # Отримуємо зниження інфікування та смертності через вакцинацію та карантин
+        vaccine_infection_reduction = float(self.vaccine_infection_reduction_entry.get()) / 100
+        vaccine_mortality_reduction = float(self.vaccine_mortality_reduction_entry.get()) / 100
+        quarantine_infection_reduction = float(self.quarantine_infection_reduction_entry.get()) / 100
+        quarantine_mortality_reduction = float(self.quarantine_mortality_reduction_entry.get()) / 100
+
+
         results = parallel_simulation(
             population_obj,
             beta=float(self.beta_entry.get()),
@@ -381,11 +392,11 @@ class SimulationApp:
             death_rate_senior=float(self.death_rate_senior_entry.get()),
             vaccination=float(self.vaccine_percent_entry.get()),
             quarantine=float(self.quarantine_percent_entry.get()), 
-            vaccine_infection_reduction=self.vaccination_impact,
-            vaccine_mortality_reduction=self.vaccination_mortality_impact,
-            quarantine_infection_reduction=self.quarantine_impact,
-            quarantine_mortality_reduction=self.quarantine_mortality_impact,
-            num_processes=4
+            vaccine_infection_reduction=vaccine_infection_reduction,
+            vaccine_mortality_reduction=vaccine_mortality_reduction,
+            quarantine_infection_reduction=quarantine_infection_reduction,
+            quarantine_mortality_reduction=quarantine_mortality_reduction,
+            num_processes=8
         )
 
         # Отримуємо всі значення з результатів
