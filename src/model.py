@@ -9,6 +9,9 @@ class Population:
         self.male_percent = male_percent
         self.female_percent = female_percent
 
+        # Додамо акумулятор для загальної кількості інфікованих
+        self.cumulative_infected = 0
+
         # Дані для кожної вікової групи
         self.groups = {
             "Children": {
@@ -53,10 +56,25 @@ class Population:
             if self.groups[group]["susceptible"] > 0:
                 self.groups[group]["infected"] = 1
                 self.groups[group]["susceptible"] -= 1
+                # Початково додаємо до акумулятора
+                self.cumulative_infected += 1
 
     def simulate_day(self, beta, gamma, vaccine_percent, vaccine_infection_reduction, vaccine_mortality_reduction,
                      quarantine_percent, quarantine_infection_reduction, quarantine_mortality_reduction):
         local_results = {}
+
+        # Перевід відсотків у дробові величини
+        v_cov = vaccine_percent / 100
+        q_cov = quarantine_percent / 100
+
+        v_inf_eff = vaccine_infection_reduction / 100  
+        q_inf_eff = quarantine_infection_reduction / 100  
+        v_mort_eff = vaccine_mortality_reduction / 100  
+        q_mort_eff = quarantine_mortality_reduction / 100  
+
+        reduction_inf = v_inf_eff * v_cov + q_inf_eff * q_cov
+        effective_beta = beta * max(1 - reduction_inf, 0)
+
         for group, data in self.groups.items():
             s = data["susceptible"]
             i = data["infected"]
@@ -64,43 +82,51 @@ class Population:
             d = data["dead"]
             total = data["total"]
             mortality_rate = data["mortality_rate"]
-    
-            # Розрахунок нових заражень, одужань і смертей
-            new_infected = beta * s * i / total if total > 0 else 0
+
+            reduction_mort = v_mort_eff * v_cov + q_mort_eff * q_cov
+            effective_mort_rate = mortality_rate * max(1 - reduction_mort, 0)
+
+            new_infected = effective_beta * s * i / total if total > 0 else 0
             new_recovered = gamma * i
-            new_dead = (mortality_rate / 100) * i
-    
+            new_dead = (effective_mort_rate / 100) * i
+
+            # Оновлюємо акумулятор накопичених інфікованих
+            self.cumulative_infected += new_infected
+
             s_new = s - new_infected
             i_new = i + new_infected - new_recovered - new_dead
             r_new = r + new_recovered
             d_new = d + new_dead
-    
+
             local_results[group] = {
                 "susceptible": s_new,
                 "infected": i_new,
                 "recovered": r_new,
                 "dead": d_new
             }
-    
-            # Оновлення даних групи для наступного дня
+
             self.groups[group]["susceptible"] = s_new
             self.groups[group]["infected"] = i_new
             self.groups[group]["recovered"] = r_new
             self.groups[group]["dead"] = d_new
-    
-        return local_results
-    
 
+        return local_results
+       
     def calculate_effectiveness(self, vaccine_percent, quarantine_percent,
                                 vaccine_infection_reduction, vaccine_mortality_reduction,
                                 quarantine_infection_reduction, quarantine_mortality_reduction):
-        v_coverage = vaccine_percent / 100
-        q_coverage = quarantine_percent / 100
+        v_cov = vaccine_percent / 100
+        q_cov = quarantine_percent / 100
 
-        vaccine_inf_reduction = round(vaccine_infection_reduction * v_coverage, 2)
-        vaccine_mort_reduction = round(vaccine_mortality_reduction * v_coverage, 2)
+        v_inf_eff = vaccine_infection_reduction / 100
+        q_inf_eff = quarantine_infection_reduction / 100
+        v_mort_eff = vaccine_mortality_reduction / 100
+        q_mort_eff = quarantine_mortality_reduction / 100
 
-        quarantine_inf_reduction = round(quarantine_infection_reduction * q_coverage, 2)
-        quarantine_mort_reduction = round(quarantine_mortality_reduction * q_coverage, 2)
+        vaccine_inf_reduction_effect = round(v_inf_eff * v_cov * 100, 2)
+        vaccine_mort_reduction_effect = round(v_mort_eff * v_cov * 100, 2)
+        quarantine_inf_reduction_effect = round(q_inf_eff * q_cov * 100, 2)
+        quarantine_mort_reduction_effect = round(q_mort_eff * q_cov * 100, 2)
 
-        return vaccine_inf_reduction, vaccine_mort_reduction, quarantine_inf_reduction, quarantine_mort_reduction
+        return (vaccine_inf_reduction_effect, vaccine_mort_reduction_effect,
+                quarantine_inf_reduction_effect, quarantine_mort_reduction_effect)

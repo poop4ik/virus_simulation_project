@@ -60,13 +60,12 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
         final_infected_last = int(np.round(final_infected[-1]))
         final_recovered_last = int(np.round(final_recovered[-1]))
         
-        # Отримання кількості смертей за кожною віковою групою безпосередньо з даних груп
+        # Отримання смертності по групах за даними
         children_dead = int(np.round(population.groups['Children']['dead']))
         young_adults_dead = int(np.round(population.groups['Young Adults']['dead']))
         middle_aged_dead = int(np.round(population.groups['Middle Aged']['dead']))
         senior_dead = int(np.round(population.groups['Senior']['dead']))
         
-        # Сумарна кількість смертей дорівнює сумі смертей по групах
         final_dead_last = children_dead + young_adults_dead + middle_aged_dead + senior_dead
 
         max_infected_value, max_infected_day_value = max_infected_data[0]
@@ -88,10 +87,17 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
         male_dead_senior = int(np.round(senior_dead * population.male_percent / 100))
         female_dead_senior = senior_dead - male_dead_senior
 
-        # Запис результатів у файл
+        # Отримання ефективних зменшень для звітності
+        (vaccine_inf_reduction_effect, vaccine_mort_reduction_effect,
+         quarantine_inf_reduction_effect, quarantine_mort_reduction_effect) = population.calculate_effectiveness(
+            vaccine_percent, quarantine_percent,
+            vaccine_infection_reduction, vaccine_mortality_reduction,
+            quarantine_infection_reduction, quarantine_mortality_reduction
+        )
+
         with open("simulation_results.txt", "w", encoding="utf-8") as file:
             file.write(f"Загальна кількість населення: {population.total_population}\n")
-            file.write(f"Загальна кількість інфікованих (накопичено): {int(np.round(final_infected[-1]))}\n")
+            file.write(f"Загальна кількість інфікованих (накопичено): {int(np.round(population.cumulative_infected))}\n")
             file.write(f"Кількість сприйнятливих (на кінець симуляції): {final_susceptible_last}\n")
             file.write(f"Кількість інфікованих (на кінець симуляції): {final_infected_last}\n")
             file.write(f"Кількість одужалих (на кінець симуляції): {final_recovered_last}\n")
@@ -110,18 +116,13 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
             vaccinated = int(np.round(population.total_population * vaccine_percent / 100))
             quarantined = int(np.round(population.total_population * quarantine_percent / 100))
 
-            file.write(f"\nВакциновано: {vaccinated} осіб ({vaccine_percent}%)\n")
-            file.write(f"Під карантином: {quarantined} осіб ({quarantine_percent}%)\n")
+            file.write(f"\nВакциновано: {vaccinated} осіб ({round(vaccine_percent, 2)}%)\n")
+            file.write(f"Під карантином: {quarantined} осіб ({round(quarantine_percent, 2)}%)\n")
 
-            vaccine_inf_reduction = round(vaccine_infection_reduction * (vaccine_percent / 100), 2)
-            vaccine_mort_reduction = round(vaccine_mortality_reduction * (vaccine_percent / 100), 2)
-            quarantine_inf_reduction = round(quarantine_infection_reduction * (quarantine_percent / 100), 2)
-            quarantine_mort_reduction = round(quarantine_mortality_reduction * (quarantine_percent / 100), 2)
-
-            file.write(f"\nЗменшення інфікування:\n - Завдяки вакцинації: {vaccine_inf_reduction}%\n")
-            file.write(f" - Завдяки карантину: {quarantine_inf_reduction}%\n")
-            file.write(f"Зменшення смертності:\n - Завдяки вакцинації: {vaccine_mort_reduction}%\n")
-            file.write(f" - Завдяки карантину: {quarantine_mort_reduction}%\n")
+            file.write(f"\nЗменшення інфікування:\n - Завдяки вакцинації: {vaccine_inf_reduction_effect}%\n")
+            file.write(f" - Завдяки карантину: {quarantine_inf_reduction_effect}%\n")
+            file.write(f"Зменшення смертності:\n - Завдяки вакцинації: {vaccine_mort_reduction_effect}%\n")
+            file.write(f" - Завдяки карантину: {quarantine_mort_reduction_effect}%\n")
 
         return final_susceptible, final_infected, final_recovered, final_dead
     else:
