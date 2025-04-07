@@ -1,11 +1,12 @@
+#simulatiom.py
 from mpi4py import MPI
 from model import run_sir_model, Population
 import numpy as np
 
-def parallel_simulation(population_obj, beta, gamma, days,
-                        children_percent, young_adults_percent, middle_age_percent, senior_percent,
-                        death_rate_children, death_rate_young_adults, death_rate_middle_age, death_rate_senior,
-                        vaccination, quarantine, num_processes):
+def parallel_simulation(population_obj, beta, gamma, days, children_percent, young_adults_percent, middle_age_percent, senior_percent, 
+                         death_rate_children, death_rate_young_adults, death_rate_middle_age, death_rate_senior, 
+                         vaccination, quarantine, vaccine_infection_reduction, vaccine_mortality_reduction, 
+                         quarantine_infection_reduction, quarantine_mortality_reduction, num_processes):
 
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
@@ -26,13 +27,11 @@ def parallel_simulation(population_obj, beta, gamma, days,
         # Знижуємо загальну ймовірність зараження на основі карантину
         beta *= (1 - quarantine)  # Знижуємо ймовірність зараження в залежності від карантину
     
-    # Вплив вакцинації на інфекцію та смертність
-    vaccination_impact = 100 * (0.6 * vaccination)  # Вплив вакцинації на зниження інфікування
-    vaccination_mortality_impact = 100 * (0.5 * vaccination)  # Вплив вакцинації на зниження смертності (50% зниження для 100% вакцинації)
-    
-    # Вплив карантину на інфекцію та смертність
-    quarantine_impact = 100 * (0.7 * quarantine)  # Вплив карантину на зниження інфікування
-    quarantine_mortality_impact = 100 * (0.3 * quarantine)  # Вплив карантину на зниження смертності (30% зниження для 100% карантину)
+    vaccination_impact = 100 * (vaccine_infection_reduction * vaccination)
+    vaccination_mortality_impact = 100 * (vaccine_mortality_reduction * vaccination)
+
+    quarantine_impact = 100 * (quarantine_infection_reduction * quarantine)
+    quarantine_mortality_impact = 100 * (quarantine_mortality_reduction * quarantine)
 
     susceptible, infected, recovered, deaths = run_sir_model(
         population, beta, gamma, days,
@@ -74,4 +73,3 @@ def parallel_simulation(population_obj, beta, gamma, days,
         return final_susceptible, final_infected, final_recovered, final_deaths, total_mortality, \
                children_mortality, young_adults_mortality, middle_age_mortality, senior_mortality, \
                vaccination_impact, vaccination_mortality_impact, quarantine_impact, quarantine_mortality_impact
-    

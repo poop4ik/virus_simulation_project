@@ -144,7 +144,7 @@ class SimulationApp:
     
         # Зміна розміру вікна на 400x750
         self.root.geometry("400x750")
-        self.center_window(self.root, 400, 750)
+        self.center_window(self.root, 400, 900)
     
         # Створюємо контейнер для сітки
         settings_frame = tk.Frame(self.root, bg="#f4f4f4")
@@ -222,11 +222,29 @@ class SimulationApp:
         self.quarantine_percent_entry = self.create_entry(settings_frame, "0")
         self.quarantine_percent_entry.grid(row=16, column=1, padx=10, pady=5)
 
+        # Додаємо поля для зниження інфікування та смертності через вакцинацію та карантин
+        self.create_label(settings_frame, "Зниження інфікування вакцинацією (%):")
+        self.vaccine_infection_reduction_entry = self.create_entry(settings_frame, "60")
+        self.vaccine_infection_reduction_entry.grid(row=17, column=1, padx=10, pady=5)
+
+        self.create_label(settings_frame, "Зниження смертності вакцинацією (%):")
+        self.vaccine_mortality_reduction_entry = self.create_entry(settings_frame, "50")
+        self.vaccine_mortality_reduction_entry.grid(row=18, column=1, padx=10, pady=5)
+
+        self.create_label(settings_frame, "Зниження інфікування карантином (%):")
+        self.quarantine_infection_reduction_entry = self.create_entry(settings_frame, "70")
+        self.quarantine_infection_reduction_entry.grid(row=19, column=1, padx=10, pady=5)
+
+        self.create_label(settings_frame, "Зниження смертності карантином (%):")
+        self.quarantine_mortality_reduction_entry = self.create_entry(settings_frame, "30")
+        self.quarantine_mortality_reduction_entry.grid(row=20, column=1, padx=10, pady=5)
+
+
 
         # Використовуємо grid для кнопок
-        self.create_button(self.root, "Запустити симуляцію", self.run_simulation).grid(row=17, column=0, padx=10, pady=5, sticky="nsew")
-        self.create_button(self.root, "Переглянути результати", self.show_results).grid(row=18, column=0, padx=10, pady=5, sticky="nsew")
-        self.create_button(self.root, "Назад", self.show_main_menu).grid(row=19, column=0, padx=10, pady=5, sticky="nsew")
+        self.create_button(self.root, "Запустити симуляцію", self.run_simulation).grid(row=21, column=0, padx=10, pady=5, sticky="nsew")
+        self.create_button(self.root, "Переглянути результати", self.show_results).grid(row=22, column=0, padx=10, pady=5, sticky="nsew")
+        self.create_button(self.root, "Назад", self.show_main_menu).grid(row=23, column=0, padx=10, pady=5, sticky="nsew")
     
         # Налаштовуємо сітку для контейнера
         settings_frame.grid_rowconfigure(0, weight=1)
@@ -246,6 +264,10 @@ class SimulationApp:
         settings_frame.grid_rowconfigure(14, weight=1)
         settings_frame.grid_rowconfigure(15, weight=1)
         settings_frame.grid_rowconfigure(16, weight=1)
+        settings_frame.grid_rowconfigure(17, weight=1)
+        settings_frame.grid_rowconfigure(18, weight=1)
+        settings_frame.grid_rowconfigure(19, weight=1)
+        settings_frame.grid_rowconfigure(20, weight=1)
 
         # Для стовпців теж можна налаштувати
         settings_frame.grid_columnconfigure(0, weight=1)
@@ -278,7 +300,13 @@ class SimulationApp:
         vaccination_value = float(self.vaccine_percent_entry.get()) / 100
         quarantine_value = float(self.quarantine_percent_entry.get()) / 100
     
-        # Передаємо значення до parallel_simulation
+        # Отримуємо зниження інфікування та смертності через вакцинацію та карантин
+        vaccine_infection_reduction = float(self.vaccine_infection_reduction_entry.get()) / 100
+        vaccine_mortality_reduction = float(self.vaccine_mortality_reduction_entry.get()) / 100
+        quarantine_infection_reduction = float(self.quarantine_infection_reduction_entry.get()) / 100
+        quarantine_mortality_reduction = float(self.quarantine_mortality_reduction_entry.get()) / 100
+    
+        # Передаємо ці значення в parallel_simulation
         self.susceptible, self.infected, self.recovered, self.deaths, self.total_mortality, \
         self.children_mortality, self.young_adults_mortality, self.middle_age_mortality, self.senior_mortality, \
         self.vaccination_impact, self.vaccination_mortality_impact, self.quarantine_impact, self.quarantine_mortality_impact = parallel_simulation(
@@ -296,6 +324,10 @@ class SimulationApp:
             death_rate_senior=death_rate_senior,
             vaccination=vaccination_value,
             quarantine=quarantine_value,
+            vaccine_infection_reduction=vaccine_infection_reduction,
+            vaccine_mortality_reduction=vaccine_mortality_reduction,
+            quarantine_infection_reduction=quarantine_infection_reduction,
+            quarantine_mortality_reduction=quarantine_mortality_reduction,
             num_processes=4
         )
     
@@ -309,7 +341,6 @@ class SimulationApp:
         self.results_saved = False
         messagebox.showinfo("Готово", "Симуляція завершена. Перегляньте результати.")
     
-
     def show_results(self):
         if not os.path.exists(TEMP_GRAPH_PATH):
             messagebox.showerror("Помилка", "Немає збережених результатів!")
@@ -335,9 +366,8 @@ class SimulationApp:
         vaccination_value = float(self.vaccine_percent_entry.get()) 
         quarantine_value = float(self.quarantine_percent_entry.get())
 
-        # Передаємо його в паралельну симуляцію
         results = parallel_simulation(
-            population_obj,  # Передаємо об'єкт популяції
+            population_obj,
             beta=float(self.beta_entry.get()),
             gamma=float(self.gamma_entry.get()),
             days=int(self.days_entry.get()),
@@ -349,9 +379,13 @@ class SimulationApp:
             death_rate_young_adults=float(self.death_rate_young_adults_entry.get()),
             death_rate_middle_age=float(self.death_rate_middle_age_entry.get()),
             death_rate_senior=float(self.death_rate_senior_entry.get()),
-            vaccination=float(self.vaccine_percent_entry.get()),  # Вакцинація
-            quarantine=float(self.quarantine_percent_entry.get()),  # Карантин
-            num_processes=4  # Кількість процесів
+            vaccination=float(self.vaccine_percent_entry.get()),
+            quarantine=float(self.quarantine_percent_entry.get()), 
+            vaccine_infection_reduction=self.vaccination_impact,
+            vaccine_mortality_reduction=self.vaccination_mortality_impact,
+            quarantine_infection_reduction=self.quarantine_impact,
+            quarantine_mortality_reduction=self.quarantine_mortality_impact,
+            num_processes=4
         )
 
         # Отримуємо всі значення з результатів
