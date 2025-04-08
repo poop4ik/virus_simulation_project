@@ -4,12 +4,15 @@ class Population:
     def __init__(self, total_population, children_percentage, young_adults_percentage, 
                  middle_age_percentage, senior_percentage,
                  death_rate_children, death_rate_young_adults, death_rate_middle_age, death_rate_senior,
-                 male_percent, female_percent):
+                 male_percent, female_percent, male_mortality, female_mortality):
         self.total_population = total_population
         self.male_percent = male_percent
         self.female_percent = female_percent
+        # Нові параметри смертності за статтю
+        self.male_mort_rate = male_mortality
+        self.female_mort_rate = female_mortality
 
-        # Додамо акумулятор для загальної кількості інфікованих
+        # Акумулятор для загальної кількості інфікованих
         self.cumulative_infected = 0
 
         # Дані для кожної вікової групи
@@ -56,14 +59,11 @@ class Population:
             if self.groups[group]["susceptible"] > 0:
                 self.groups[group]["infected"] = 1
                 self.groups[group]["susceptible"] -= 1
-                # Початково додаємо до акумулятора
                 self.cumulative_infected += 1
 
     def simulate_day(self, beta, gamma, vaccine_percent, vaccine_infection_reduction, vaccine_mortality_reduction,
                      quarantine_percent, quarantine_infection_reduction, quarantine_mortality_reduction):
         local_results = {}
-
-        # Перевід відсотків у дробові величини
         v_cov = vaccine_percent / 100
         q_cov = quarantine_percent / 100
 
@@ -90,7 +90,6 @@ class Population:
             new_recovered = gamma * i
             new_dead = (effective_mort_rate / 100) * i
 
-            # Оновлюємо акумулятор накопичених інфікованих
             self.cumulative_infected += new_infected
 
             s_new = s - new_infected
@@ -111,7 +110,7 @@ class Population:
             self.groups[group]["dead"] = d_new
 
         return local_results
-       
+
     def calculate_effectiveness(self, vaccine_percent, quarantine_percent,
                                 vaccine_infection_reduction, vaccine_mortality_reduction,
                                 quarantine_infection_reduction, quarantine_mortality_reduction):

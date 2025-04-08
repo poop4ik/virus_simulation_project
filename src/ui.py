@@ -150,11 +150,11 @@ class SimulationApp:
         self.children_entry.grid(row=4, column=1, padx=10, pady=5)
 
         self.create_label(settings_frame, "Відсоток молодих людей (15-34 роки):")
-        self.young_adults_entry = self.create_entry(settings_frame, "30")
+        self.young_adults_entry = self.create_entry(settings_frame, "35")
         self.young_adults_entry.grid(row=5, column=1, padx=10, pady=5)
 
         self.create_label(settings_frame, "Відсоток середнього віку (35-64 роки):")
-        self.middle_age_entry = self.create_entry(settings_frame, "30")
+        self.middle_age_entry = self.create_entry(settings_frame, "25")
         self.middle_age_entry.grid(row=6, column=1, padx=10, pady=5)
 
         self.create_label(settings_frame, "Відсоток похилого віку (65+ років):")
@@ -163,7 +163,7 @@ class SimulationApp:
 
         # Додаємо коефіцієнти зараження та одужання
         self.create_label(settings_frame, "Коеф. зараження (β):")
-        self.beta_entry = self.create_entry(settings_frame, "0.3")
+        self.beta_entry = self.create_entry(settings_frame, "0.4")
         self.beta_entry.grid(row=8, column=1, padx=10, pady=5)
 
         self.create_label(settings_frame, "Коеф. одужання (γ):")
@@ -176,50 +176,59 @@ class SimulationApp:
 
         # Додаємо нові поля для коефіцієнтів летальності для кожної групи
         self.create_label(settings_frame, "Летальність дітей (%):")
-        self.death_rate_children_entry = self.create_entry(settings_frame, "10")  # Значення за замовчуванням
+        self.death_rate_children_entry = self.create_entry(settings_frame, "8")  # Значення за замовчуванням
         self.death_rate_children_entry.grid(row=11, column=1, padx=10, pady=5)
 
-        self.create_label(settings_frame, "Летальності для молодих людей:")
-        self.death_rate_young_adults_entry = self.create_entry(settings_frame, "10")
+        self.create_label(settings_frame, "Летальності молодих (%):")
+        self.death_rate_young_adults_entry = self.create_entry(settings_frame, "5")
         self.death_rate_young_adults_entry.grid(row=12, column=1, padx=10, pady=5)
 
-        self.create_label(settings_frame, "Летальність для середнього віку:")
-        self.death_rate_middle_age_entry = self.create_entry(settings_frame, "5")
+        self.create_label(settings_frame, "Летальність середнього віку (%):")
+        self.death_rate_middle_age_entry = self.create_entry(settings_frame, "6")
         self.death_rate_middle_age_entry.grid(row=13, column=1, padx=10, pady=5)
 
-        self.create_label(settings_frame, "Летальність летальності для похилого віку:")
-        self.death_rate_senior_entry = self.create_entry(settings_frame, "5")
+        self.create_label(settings_frame, "Летальність похилого віку (%):")
+        self.death_rate_senior_entry = self.create_entry(settings_frame, "10")
         self.death_rate_senior_entry.grid(row=14, column=1, padx=10, pady=5)
 
+        self.create_label(settings_frame, "Смертність чоловіків (%):")
+        self.male_mortality_entry = self.create_entry(settings_frame, "8")
+        self.male_mortality_entry.grid(row=15, column=1, padx=10, pady=5)
+
+        self.create_label(settings_frame, "Смертність жінок (%):")
+        self.female_mortality_entry = self.create_entry(settings_frame, "6")
+        self.female_mortality_entry.grid(row=16, column=1, padx=10, pady=5)
+
+
         self.create_label(settings_frame, "Вакцинація (%)")
-        self.vaccine_percent_entry =self.create_entry(settings_frame, "70")
-        self.vaccine_percent_entry.grid(row=15, column=1, padx=10, pady=5)
+        self.vaccine_percent_entry =self.create_entry(settings_frame, "20")
+        self.vaccine_percent_entry.grid(row=17, column=1, padx=10, pady=5)
 
         self.create_label(settings_frame, "Карантин (%)")
         self.quarantine_percent_entry = self.create_entry(settings_frame, "20")
-        self.quarantine_percent_entry.grid(row=16, column=1, padx=10, pady=5)
+        self.quarantine_percent_entry.grid(row=18, column=1, padx=10, pady=5)
 
         # Додаємо поля для зниження інфікування та смертності через вакцинацію та карантин
         self.create_label(settings_frame, "Зниження інфікування вакцинацією (%):")
         self.vaccine_infection_reduction_entry = self.create_entry(settings_frame, "60")
-        self.vaccine_infection_reduction_entry.grid(row=17, column=1, padx=10, pady=5)
+        self.vaccine_infection_reduction_entry.grid(row=19, column=1, padx=10, pady=5)
 
         self.create_label(settings_frame, "Зниження смертності вакцинацією (%):")
         self.vaccine_mortality_reduction_entry = self.create_entry(settings_frame, "50")
-        self.vaccine_mortality_reduction_entry.grid(row=18, column=1, padx=10, pady=5)
+        self.vaccine_mortality_reduction_entry.grid(row=20, column=1, padx=10, pady=5)
 
         self.create_label(settings_frame, "Зниження інфікування карантином (%):")
         self.quarantine_infection_reduction_entry = self.create_entry(settings_frame, "70")
-        self.quarantine_infection_reduction_entry.grid(row=19, column=1, padx=10, pady=5)
+        self.quarantine_infection_reduction_entry.grid(row=21, column=1, padx=10, pady=5)
 
         self.create_label(settings_frame, "Зниження смертності карантином (%):")
         self.quarantine_mortality_reduction_entry = self.create_entry(settings_frame, "30")
-        self.quarantine_mortality_reduction_entry.grid(row=20, column=1, padx=10, pady=5)
+        self.quarantine_mortality_reduction_entry.grid(row=22, column=1, padx=10, pady=5)
 
         # Використовуємо grid для кнопок
-        self.create_button(self.root, "Запустити симуляцію", self.run_simulation).grid(row=21, column=0, padx=10, pady=5, sticky="nsew")
-        self.create_button(self.root, "Переглянути результати", self.show_results).grid(row=22, column=0, padx=10, pady=5, sticky="nsew")
-        self.create_button(self.root, "Назад", self.show_main_menu).grid(row=23, column=0, padx=10, pady=5, sticky="nsew")
+        self.create_button(self.root, "Запустити симуляцію", self.run_simulation).grid(row=23, column=0, padx=10, pady=5, sticky="nsew")
+        self.create_button(self.root, "Переглянути результати", self.show_results).grid(row=24, column=0, padx=10, pady=5, sticky="nsew")
+        self.create_button(self.root, "Назад", self.show_main_menu).grid(row=25, column=0, padx=10, pady=5, sticky="nsew")
     
         # Налаштовуємо сітку для контейнера
         settings_frame.grid_rowconfigure(0, weight=1)
@@ -243,6 +252,8 @@ class SimulationApp:
         settings_frame.grid_rowconfigure(18, weight=1)
         settings_frame.grid_rowconfigure(19, weight=1)
         settings_frame.grid_rowconfigure(20, weight=1)
+        settings_frame.grid_rowconfigure(21, weight=1)
+        settings_frame.grid_rowconfigure(22, weight=1)
 
         # Для стовпців теж можна налаштувати
         settings_frame.grid_columnconfigure(0, weight=1)
@@ -279,6 +290,9 @@ class SimulationApp:
         death_rate_middle_age = float(self.death_rate_middle_age_entry.get())
         death_rate_senior = float(self.death_rate_senior_entry.get())
 
+        male_mortality = float(self.male_mortality_entry.get())
+        female_mortality = float(self.female_mortality_entry.get())
+
         # Отримуємо дані щодо вакцинації та карантину
         vaccine_percent = float(self.vaccine_percent_entry.get())
         quarantine_percent = float(self.quarantine_percent_entry.get())
@@ -287,26 +301,52 @@ class SimulationApp:
         quarantine_infection_reduction = float(self.quarantine_infection_reduction_entry.get())
         quarantine_mortality_reduction = float(self.quarantine_mortality_reduction_entry.get())
 
-        # Створюємо об'єкт популяції із заданими параметрами
+       
+        from model import Population
         population = Population(
-            total_population, children_percentage, young_adults_percentage, middle_age_percentage, senior_percentage,
+            total_population,
+            children_percentage, young_adults_percentage, middle_age_percentage, senior_percentage,
             death_rate_children, death_rate_young_adults, death_rate_middle_age, death_rate_senior,
-            male_percent, female_percent
+            male_percent, female_percent, male_mortality, female_mortality
         )
-
-        susceptible, infected, recovered, dead = parallel_simulation(
-            population, beta, gamma, days, 4, 
+    
+        data = parallel_simulation(
+            population, beta, gamma, days, 4,
             vaccine_percent, vaccine_infection_reduction, vaccine_mortality_reduction,
             quarantine_percent, quarantine_infection_reduction, quarantine_mortality_reduction
         )
-
-        # Вивід результатів у консоль
-        print("Experiment:", experiment_name)
-        print("Simulation finished. Results saved.")
-
-        # Імпорт функції для побудови графіку та передача даних
-        from visualisation import plot_results
-        plot_results(susceptible, infected, recovered, dead)
+    
+        messagebox.showinfo(
+            "Симуляція завершена",
+            f"Експеримент: {experiment_name}\nСимуляцію завершено. Перегляньте результати"
+        )
+    
+        from visualisation import (
+            plot_results,
+            plot_age_mortality,
+            plot_vaccine_quarantine_effects,
+            plot_gender_mortality,
+            plot_cumulative_infected,
+            plot_peak_infected,
+            plot_gender_distribution,
+            plot_age_gender_mortality
+        )
+    
+        plot_results(
+            data['susceptible'],
+            data['infected'],
+            data['recovered'],
+            data['dead']
+        )
+        plot_age_mortality(data['age_deaths'])
+        plot_vaccine_quarantine_effects(*data['vaccine_quarantine_effects'])
+        plot_gender_mortality(*data['gender_deaths'])
+        plot_cumulative_infected(data['cumulative_infected'], days)
+        plot_peak_infected(data['infected'], data['peak'][1])
+    
+        # Нові графіки, які раніше вимагали додаткових обчислень
+        plot_gender_distribution(*data['population_gender'])
+        plot_age_gender_mortality(data['age_gender_deaths'])
 
    
     def show_results(self):
