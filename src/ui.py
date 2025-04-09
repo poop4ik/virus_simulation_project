@@ -16,9 +16,6 @@ class SimulationApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Симуляція поширення вірусу")
-        self.root.geometry("400x750")
-        self.root.config(bg="#f4f4f4")
-        self.center_window(self.root, 400, 750)
         self.results_saved = False
         self.susceptible = None
         self.infected = None
@@ -34,231 +31,140 @@ class SimulationApp:
         y = (screen_height - height) // 2
 
         window.geometry(f"{width}x{height}+{x}+{y}")
-
-    def create_label(self, parent, text, font_size=10):
-        label = tk.Label(parent, text=text, font=("Arial", font_size), bg="#f4f4f4")
-        label.grid(padx=10, pady=10)  # Збільшені відступи для кращого вирівнювання
-        return label
-
-    def create_button(self, parent, text, command, font_size=10):
-        button = tk.Button(parent, text=text, font=("Arial", font_size), command=command, width=20, height=1, 
-                           bg="#4CAF50", fg="white", relief="solid", bd=2)
-        button.grid(padx=10, pady=10)  # Збільшені відступи для кращого вирівнювання
-        return button
-
-    def create_entry(self, parent, default_value="", font_size=10):
-        entry = tk.Entry(parent, font=("Arial", font_size), width=20, bd=2, relief="solid")
-        entry.insert(0, default_value)
-        entry.grid(padx=10, pady=5)
-        return entry
-
+    
     def show_main_menu(self):
+        # Очищаємо всі віджети
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        main_menu_frame = tk.Frame(self.root, bg="#f4f4f4")
-        main_menu_frame.grid(row=0, column=0, sticky="nsew")
-
-        # Налаштовуємо вирівнювання для всіх рядів і колонок
-        self.root.grid_rowconfigure(0, weight=1)
-        self.root.grid_columnconfigure(0, weight=1)
-
-        main_menu_frame.grid_rowconfigure(0, weight=1)
-        main_menu_frame.grid_columnconfigure(0, weight=1)
-
-        # Розміщуємо лейбл та кнопки в центрі
-        label = self.create_label(main_menu_frame, "Оберіть опцію:", 14)
-        label.grid(row=0, column=0, sticky="nsew")
-
-        button1 = self.create_button(main_menu_frame, "Створити новий тест", self.show_simulation_settings, 12)
-        button1.grid(row=1, column=0, sticky="nsew")
-
-        button2 = self.create_button(main_menu_frame, "Завантажити параметри з файлу", self.load_parameters, 12)
-        button2.grid(row=2, column=0, sticky="nsew")
-
-        button3 = self.create_button(main_menu_frame, "Вихід", self.root.quit, 12)
-        button3.grid(row=3, column=0, sticky="nsew")
-
-        # Встановлення розміру вікна назад на 400x250
+        # Встановлюємо розмір і центруємо
         self.root.geometry("400x250")
         self.center_window(self.root, 400, 250)
 
-    def load_parameters(self):
-        file_path = filedialog.askopenfilename(title="Виберіть файл з параметрами", filetypes=[("Text files", "*.txt")])
+        # Контейнер для всіх елементів
+        main_frame = tk.Frame(self.root, bg="#f4f4f4")
+        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        main_frame.grid_columnconfigure(0, weight=1)
 
-        if not file_path:
-            return  # Користувач скасував вибір файлу
+        # Заголовок
+        lbl = tk.Label(
+            main_frame,
+            text="Оберіть опцію:",
+            font=("Arial", 14),
+            bg="#f4f4f4"
+        )
+        lbl.grid(row=0, column=0, sticky="we", pady=(0, 20))
 
-        with open(file_path, 'r') as file:
-            parameters = file.readlines()
+        # Кнопки
+        btn1 = tk.Button(
+            main_frame,
+            text="Створити новий тест",
+            command=self.show_simulation_settings,
+            font=("Arial", 12)
+        )
+        btn1.grid(row=1, column=0, sticky="we", pady=10)
 
-        if len(parameters) < 4:
-            messagebox.showerror("Помилка", "Файл має містити мінімум 4 рядки параметрів.")
-            return
+        btn2 = tk.Button(
+            main_frame,
+            text="Обрахувати параметри",
+            command=self.show_calculate_parameters_settings,
+            font=("Arial", 12)
+        )
+        btn2.grid(row=2, column=0, sticky="we", pady=10)
 
-        # Переходимо на екран налаштувань симуляції, якщо ще не там
-        self.show_simulation_settings()
-
-        # Тепер можна безпечно заповнювати поля
-        self.population_entry.delete(0, tk.END)
-        self.population_entry.insert(0, parameters[0].strip())
-
-        self.beta_entry.delete(0, tk.END)
-        self.beta_entry.insert(0, parameters[1].strip())
-
-        self.gamma_entry.delete(0, tk.END)
-        self.gamma_entry.insert(0, parameters[2].strip())
-
-        self.days_entry.delete(0, tk.END)
-        self.days_entry.insert(0, parameters[3].strip())
-
-        messagebox.showinfo("Готово", "Параметри завантажено успішно!")
-
+        btn3 = tk.Button(
+            main_frame,
+            text="Завантажити параметри",
+            command=self.load_parameters,
+            font=("Arial", 12)
+        )
+        btn3.grid(row=3, column=0, sticky="we", pady=10)
 
     def show_simulation_settings(self):
+        # Очищаємо вікно
         for widget in self.root.winfo_children():
             widget.destroy()
-    
-        # Зміна розміру вікна на 400x750
-        self.root.geometry("400x750")
-        self.center_window(self.root, 400, 900)
-    
-        # Створюємо контейнер для сітки
-        settings_frame = tk.Frame(self.root, bg="#f4f4f4")
-        settings_frame.grid(pady=20)
-    
-        # Використовуємо grid для всіх елементів, включаючи кнопки
-        self.create_label(settings_frame, "Назва експерименту:")
-        self.experiment_name_entry = self.create_entry(settings_frame, "Test_Infection_X")
-        self.experiment_name_entry.grid(row=0, column=1, padx=10, pady=5)
-    
-        self.create_label(settings_frame, "Популяція:")
-        self.population_entry = self.create_entry(settings_frame, "1000")
-        self.population_entry.grid(row=1, column=1, padx=10, pady=5)
-    
-        # Додаємо нові поля для введення статі та вікових груп
-        self.create_label(settings_frame, "Відсоток чоловіків:")
-        self.male_entry = self.create_entry(settings_frame, "60")
-        self.male_entry.grid(row=2, column=1, padx=10, pady=5)
 
-        self.create_label(settings_frame, "Відсоток жінок:")
-        self.female_entry = self.create_entry(settings_frame, "40")
-        self.female_entry.grid(row=3, column=1, padx=10, pady=5)
+        # Змінюємо розмір і центруємо
+        self.root.geometry("800x700")
+        self.center_window(self.root, 800, 700)
 
-        self.create_label(settings_frame, "Відсоток дітей (0-14 років):")
-        self.children_entry = self.create_entry(settings_frame, "20")
-        self.children_entry.grid(row=4, column=1, padx=10, pady=5)
+        # Фрейм для всього
+        outer_frame = tk.Frame(self.root, bg="#f4f4f4")
+        outer_frame.pack(fill="both", expand=True, padx=10, pady=20)
 
-        self.create_label(settings_frame, "Відсоток молодих людей (15-34 роки):")
-        self.young_adults_entry = self.create_entry(settings_frame, "35")
-        self.young_adults_entry.grid(row=5, column=1, padx=10, pady=5)
+        # Фрейм для полів
+        settings_frame = tk.Frame(outer_frame, bg="#f4f4f4")
+        settings_frame.pack(fill="both", expand=True)
 
-        self.create_label(settings_frame, "Відсоток середнього віку (35-64 роки):")
-        self.middle_age_entry = self.create_entry(settings_frame, "25")
-        self.middle_age_entry.grid(row=6, column=1, padx=10, pady=5)
+        # Налаштування колонок
+        for col in range(3):
+            settings_frame.grid_columnconfigure(col, weight=1, uniform="col")
 
-        self.create_label(settings_frame, "Відсоток похилого віку (65+ років):")
-        self.senior_entry = self.create_entry(settings_frame, "20")
-        self.senior_entry.grid(row=7, column=1, padx=10, pady=5)
+        # Поля
+        fields = [
+            ("Назва експерименту",                "experiment_name_entry",                  "Test_Infection_X"),
+            ("Популяція",                         "population_entry",                       "1000"),
+            ("% чоловіків",                       "male_entry",                             "60"),
+            ("% жінок",                           "female_entry",                           "40"),
+            ("% дітей (0–14 років)",              "children_entry",                         "20"),
+            ("% молодь (15–34 років)",            "young_adults_entry",                     "35"),
+            ("% середній вік (35–64)",            "middle_age_entry",                       "25"),
+            ("% похилі (65+)",                    "senior_entry",                           "20"),
+            ("Коеф. зараження (β)",               "beta_entry",                             "0.4"),
+            ("Коеф. одужання (γ)",                "gamma_entry",                            "0.1"),
+            ("Кількість днів",                    "days_entry",                             "100"),
+            ("Летальність дітей (%)",             "death_rate_children_entry",              "8"),
+            ("Летальність молодих (%)",           "death_rate_young_adults_entry",          "5"),
+            ("Летальність середнього віку (%)",   "death_rate_middle_age_entry",            "6"),
+            ("Летальність похилого віку (%)",     "death_rate_senior_entry",                "10"),
+            ("Смертність чоловіків (%)",          "male_mortality_entry",                   "8"),
+            ("Смертність жінок (%)",              "female_mortality_entry",                 "6"),
+            ("Вакцинація (%)",                    "vaccine_percent_entry",                  "20"),
+            ("Карантин (%)",                      "quarantine_percent_entry",               "20"),
+            ("↓ інфікування вакциною (%)",        "vaccine_infection_reduction_entry",      "60"),
+            ("↓ смертність вакциною (%)",         "vaccine_mortality_reduction_entry",      "50"),
+            ("↓ інфікування карантином (%)",      "quarantine_infection_reduction_entry",   "70"),
+            ("↓ смертність карантином (%)",       "quarantine_mortality_reduction_entry",   "30"),
+        ]
 
-        # Додаємо коефіцієнти зараження та одужання
-        self.create_label(settings_frame, "Коеф. зараження (β):")
-        self.beta_entry = self.create_entry(settings_frame, "0.4")
-        self.beta_entry.grid(row=8, column=1, padx=10, pady=5)
+        for idx, (text, attr, default) in enumerate(fields):
+            col = idx % 3
+            row = (idx // 3) * 2
 
-        self.create_label(settings_frame, "Коеф. одужання (γ):")
-        self.gamma_entry = self.create_entry(settings_frame, "0.1")
-        self.gamma_entry.grid(row=9, column=1, padx=10, pady=5)
+            # Динамічний padx для рівного відступу між колонками
+            if col == 0:
+                padx = (10, 5)
+            elif col == 1:
+                padx = (10, 10)
+            else:
+                padx = (5, 10)
 
-        self.create_label(settings_frame, "Кількість днів:")
-        self.days_entry = self.create_entry(settings_frame, "100")
-        self.days_entry.grid(row=10, column=1, padx=10, pady=5)
+            lbl = tk.Label(settings_frame, text=text, font=("Arial", 10), bg="#f4f4f4")
+            lbl.grid(row=row, column=col, padx=padx, pady=(10, 0), sticky="w")
 
-        # Додаємо нові поля для коефіцієнтів летальності для кожної групи
-        self.create_label(settings_frame, "Летальність дітей (%):")
-        self.death_rate_children_entry = self.create_entry(settings_frame, "8")  # Значення за замовчуванням
-        self.death_rate_children_entry.grid(row=11, column=1, padx=10, pady=5)
+            entry = tk.Entry(settings_frame, font=("Arial", 10), bd=2, relief="solid")
+            entry.insert(0, default)
+            entry.grid(row=row+1, column=col, padx=padx, pady=(0, 10), sticky="we")
 
-        self.create_label(settings_frame, "Летальності молодих (%):")
-        self.death_rate_young_adults_entry = self.create_entry(settings_frame, "5")
-        self.death_rate_young_adults_entry.grid(row=12, column=1, padx=10, pady=5)
+            setattr(self, attr, entry)
 
-        self.create_label(settings_frame, "Летальність середнього віку (%):")
-        self.death_rate_middle_age_entry = self.create_entry(settings_frame, "6")
-        self.death_rate_middle_age_entry.grid(row=13, column=1, padx=10, pady=5)
+        # Кнопки — всередині того ж outer_frame
+        buttons_frame = tk.Frame(outer_frame, bg="#f4f4f4")
+        buttons_frame.pack(fill="x", pady=10)
 
-        self.create_label(settings_frame, "Летальність похилого віку (%):")
-        self.death_rate_senior_entry = self.create_entry(settings_frame, "10")
-        self.death_rate_senior_entry.grid(row=14, column=1, padx=10, pady=5)
+        for col in range(3):
+            buttons_frame.grid_columnconfigure(col, weight=1, uniform="btn")
 
-        self.create_label(settings_frame, "Смертність чоловіків (%):")
-        self.male_mortality_entry = self.create_entry(settings_frame, "8")
-        self.male_mortality_entry.grid(row=15, column=1, padx=10, pady=5)
+        btn_run  = tk.Button(buttons_frame, text="Запустити симуляцію",    command=self.run_simulation,    height=2)
+        btn_view = tk.Button(buttons_frame, text="Переглянути результати", command=self.show_results,      height=2)
+        btn_back = tk.Button(buttons_frame, text="Назад",                  command=self.show_main_menu,    height=2)
 
-        self.create_label(settings_frame, "Смертність жінок (%):")
-        self.female_mortality_entry = self.create_entry(settings_frame, "6")
-        self.female_mortality_entry.grid(row=16, column=1, padx=10, pady=5)
+        btn_run .grid(row=0, column=0, padx=(10, 5), pady=5, sticky="we")
+        btn_view.grid(row=0, column=1, padx=(10, 10), pady=5, sticky="we")
+        btn_back.grid(row=0, column=2, padx=(5, 10), pady=5, sticky="we")
 
 
-        self.create_label(settings_frame, "Вакцинація (%)")
-        self.vaccine_percent_entry =self.create_entry(settings_frame, "20")
-        self.vaccine_percent_entry.grid(row=17, column=1, padx=10, pady=5)
-
-        self.create_label(settings_frame, "Карантин (%)")
-        self.quarantine_percent_entry = self.create_entry(settings_frame, "20")
-        self.quarantine_percent_entry.grid(row=18, column=1, padx=10, pady=5)
-
-        # Додаємо поля для зниження інфікування та смертності через вакцинацію та карантин
-        self.create_label(settings_frame, "Зниження інфікування вакцинацією (%):")
-        self.vaccine_infection_reduction_entry = self.create_entry(settings_frame, "60")
-        self.vaccine_infection_reduction_entry.grid(row=19, column=1, padx=10, pady=5)
-
-        self.create_label(settings_frame, "Зниження смертності вакцинацією (%):")
-        self.vaccine_mortality_reduction_entry = self.create_entry(settings_frame, "50")
-        self.vaccine_mortality_reduction_entry.grid(row=20, column=1, padx=10, pady=5)
-
-        self.create_label(settings_frame, "Зниження інфікування карантином (%):")
-        self.quarantine_infection_reduction_entry = self.create_entry(settings_frame, "70")
-        self.quarantine_infection_reduction_entry.grid(row=21, column=1, padx=10, pady=5)
-
-        self.create_label(settings_frame, "Зниження смертності карантином (%):")
-        self.quarantine_mortality_reduction_entry = self.create_entry(settings_frame, "30")
-        self.quarantine_mortality_reduction_entry.grid(row=22, column=1, padx=10, pady=5)
-
-        # Використовуємо grid для кнопок
-        self.create_button(self.root, "Запустити симуляцію", self.run_simulation).grid(row=23, column=0, padx=10, pady=5, sticky="nsew")
-        self.create_button(self.root, "Переглянути результати", self.show_results).grid(row=24, column=0, padx=10, pady=5, sticky="nsew")
-        self.create_button(self.root, "Назад", self.show_main_menu).grid(row=25, column=0, padx=10, pady=5, sticky="nsew")
-    
-        # Налаштовуємо сітку для контейнера
-        settings_frame.grid_rowconfigure(0, weight=1)
-        settings_frame.grid_rowconfigure(1, weight=1)
-        settings_frame.grid_rowconfigure(2, weight=1)
-        settings_frame.grid_rowconfigure(3, weight=1)
-        settings_frame.grid_rowconfigure(4, weight=1)
-        settings_frame.grid_rowconfigure(5, weight=1)
-        settings_frame.grid_rowconfigure(6, weight=1)
-        settings_frame.grid_rowconfigure(7, weight=1)
-        settings_frame.grid_rowconfigure(8, weight=1)
-        settings_frame.grid_rowconfigure(9, weight=1)
-        settings_frame.grid_rowconfigure(10, weight=1)
-        settings_frame.grid_rowconfigure(11, weight=1)
-        settings_frame.grid_rowconfigure(12, weight=1)
-        settings_frame.grid_rowconfigure(13, weight=1)
-        settings_frame.grid_rowconfigure(14, weight=1)
-        settings_frame.grid_rowconfigure(15, weight=1)
-        settings_frame.grid_rowconfigure(16, weight=1)
-        settings_frame.grid_rowconfigure(17, weight=1)
-        settings_frame.grid_rowconfigure(18, weight=1)
-        settings_frame.grid_rowconfigure(19, weight=1)
-        settings_frame.grid_rowconfigure(20, weight=1)
-        settings_frame.grid_rowconfigure(21, weight=1)
-        settings_frame.grid_rowconfigure(22, weight=1)
-
-        # Для стовпців теж можна налаштувати
-        settings_frame.grid_columnconfigure(0, weight=1)
-        settings_frame.grid_columnconfigure(1, weight=3)
-    
 
     def run_simulation(self):
         # Отримуємо ім'я експерименту
@@ -301,7 +207,6 @@ class SimulationApp:
         quarantine_infection_reduction = float(self.quarantine_infection_reduction_entry.get())
         quarantine_mortality_reduction = float(self.quarantine_mortality_reduction_entry.get())
 
-       
         from model import Population
         population = Population(
             total_population,
@@ -352,97 +257,235 @@ class SimulationApp:
     def show_results(self):
         if not os.path.exists(TEMP_GRAPH_PATH):
             messagebox.showerror("Помилка", "Немає збережених результатів!")
-            returnн
+            return
+
+    def show_calculate_parameters_settings(self):
+        # Очищаємо вікно від попередніх віджетів
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+        # Встановлюємо розмір вікна та центруємо його
+        self.root.geometry("800x700")
+        self.center_window(self.root, 800, 700)
+
+        # Основний фрейм
+        outer_frame = tk.Frame(self.root, bg="#f4f4f4")
+        outer_frame.pack(fill="both", expand=True, padx=10, pady=20)
+
+        # Фрейм для полів введення
+        settings_frame = tk.Frame(outer_frame, bg="#f4f4f4")
+        settings_frame.pack(fill="both", expand=True)
+
+        # Налаштовуємо сітку (3 колонки)
+        for col in range(3):
+            settings_frame.grid_columnconfigure(col, weight=1, uniform="col")
+
+        # Поля введення: (текст, назва атрибуту, значення за замовчуванням)
+        fields = [
+            ("Назва експерименту",                   "experiment_name_entry",        "Test_Calculation"),
+            ("Кількість людей",                      "population_entry",             "1000"),
+            
+            ("Кількість чоловіків",                  "male_population_entry",        "700"),
+            ("Кількість жінок",                      "female_population_entry",      "300"),
+
+            # Розподіл по вікових групах (у сумі = популяція)
+            ("Кількість дітей (0–14 років)",         "children_population_entry",    "200"),
+            ("Кількість молодь (15–34 років)",       "youth_population_entry",       "300"),
+            ("Кількість середній вік (35–64)",       "middle_population_entry",      "300"),
+            ("Кількість похилі (65+)",               "senior_population_entry",      "200"),
+
+            ("Кількість днів",                       "days_entry",                   "100"),
+    
+            # Захворюваність за статтю           
+            ("Захворіло чоловіків",                  "infected_male_entry",          "350"),
+            ("Захворіло жінок",                      "infected_female_entry",        "150"),
+
+            # Захворюваність за віковими групами
+            ("Захворіло дітей (0–14)",               "infected_children_entry",      "100"),
+            ("Захворіло молодь (15–34)",             "infected_youth_entry",         "150"),
+            ("Захворіло середній вік (35–64)",       "infected_middle_entry",        "150"),
+            ("Захворіло похилі (65+)",               "infected_senior_entry",        "100"),
+
+            # Смертність за статтю
+            ("Померло чоловіків",                 "male_death_entry",             "30"),
+            ("Померло жінок",                     "female_death_entry",           "20"),
+
+            # Смертність за віковими групами
+            ("Померло дітей (0–14)",              "death_children_entry",         "10"),
+            ("Померло молодь (15–34)",            "death_youth_entry",            "10"),
+            ("Померло середній вік (35–64)",      "death_middle_entry",           "10"),
+            ("Померло похилі (65+)",              "death_senior_entry",           "20"),
+
+            # Додаємо нове поле для вводу кількості одужавших
+            ("Кількість одужавших",                  "recovered_population_entry",   "200"),
+
+        ]
 
 
-        # Отримуємо результат симуляції
-        population_obj = self.get_population_input()  # Отримуємо об'єкт популяції (populatio_obj)
+        # Розміщення полів у сітці
+        for idx, (text, attr, default) in enumerate(fields):
+            col = idx % 3
+            row = (idx // 3) * 2
+            if col == 0:
+                padx = (10, 5)
+            elif col == 1:
+                padx = (10, 10)
+            else:
+                padx = (5, 10)
+            lbl = tk.Label(settings_frame, text=text, font=("Arial", 10), bg="#f4f4f4")
+            lbl.grid(row=row, column=col, padx=padx, pady=(10, 0), sticky="w")
+            entry = tk.Entry(settings_frame, font=("Arial", 10), bd=2, relief="solid")
+            entry.insert(0, default)
+            entry.grid(row=row+1, column=col, padx=padx, pady=(0, 10), sticky="we")
+            setattr(self, attr, entry)
 
-        vaccination_value = float(self.vaccine_percent_entry.get()) 
-        quarantine_value = float(self.quarantine_percent_entry.get())
+        # Кнопки в нижній частині вікна
+        buttons_frame = tk.Frame(outer_frame, bg="#f4f4f4")
+        buttons_frame.pack(fill="x", pady=10)
+        for col in range(3):
+            buttons_frame.grid_columnconfigure(col, weight=1, uniform="btn")
+        btn_calc = tk.Button(buttons_frame, text="Обрахувати параметри", command=self.calculate_parameters, height=2)
+        btn_save = tk.Button(buttons_frame, text="Зберегти параметри", command=self.save_calculation_parameters, height=2)
+        btn_back = tk.Button(buttons_frame, text="Назад", command=self.show_main_menu, height=2)
+        btn_calc.grid(row=0, column=0, padx=(10, 5), pady=5, sticky="we")
+        btn_save.grid(row=0, column=1, padx=(5, 5), pady=5, sticky="we")
+        btn_back.grid(row=0, column=2, padx=(5, 10), pady=5, sticky="we")
+        
+    def save_calculation_parameters(self):
+        parameters = {
+            "Назва експерименту": getattr(self, "experiment_name_entry").get(),
+            "Кількість людей": getattr(self, "population_entry").get(),
+            "Захворіло чоловіків": getattr(self, "infected_male_entry").get(),
+            "Захворіло жінок": getattr(self, "infected_female_entry").get(),
+            "Захворіло дітей": getattr(self, "infected_children_entry").get(),
+            "Захворіло дорослих": getattr(self, "infected_adults_entry").get(),
+            "Смертність чоловіків (%)": getattr(self, "male_death_entry").get(),
+            "Смертність жінок (%)": getattr(self, "female_death_entry").get(),
+            "Смертність дітей (%)": getattr(self, "children_death_entry").get(),
+            "Смертність дорослих (%)": getattr(self, "adults_death_entry").get(),
+            "Кількість інфікованих": getattr(self, "total_infected_entry").get(),
+            "Кількість днів": getattr(self, "days_entry").get(),
+        }
 
-        # Отримуємо зниження інфікування та смертності через вакцинацію та карантин
-        vaccine_infection_reduction = float(self.vaccine_infection_reduction_entry.get()) / 100
-        vaccine_mortality_reduction = float(self.vaccine_mortality_reduction_entry.get()) / 100
-        quarantine_infection_reduction = float(self.quarantine_infection_reduction_entry.get()) / 100
-        quarantine_mortality_reduction = float(self.quarantine_mortality_reduction_entry.get()) / 100
+    def calculate_parameters(self):
+        try:
+            # Отримуємо значення з полів
+            population = float(self.population_entry.get())
+            male = float(self.male_population_entry.get())
+            female = float(self.female_population_entry.get())
+
+            children = float(self.children_population_entry.get())
+            youth = float(self.youth_population_entry.get())
+            middle = float(self.middle_population_entry.get())
+            senior = float(self.senior_population_entry.get())
+
+            infected_children = float(self.infected_children_entry.get())
+            infected_youth = float(self.infected_youth_entry.get())
+            infected_middle = float(self.infected_middle_entry.get())
+            infected_senior = float(self.infected_senior_entry.get())
+
+            death_children = float(self.death_children_entry.get())
+            death_youth = float(self.death_youth_entry.get())
+            death_middle = float(self.death_middle_entry.get())
+            death_senior = float(self.death_senior_entry.get())
+
+            infected_male = float(self.infected_male_entry.get())
+            infected_female = float(self.infected_female_entry.get())
+            death_male = float(self.male_death_entry.get())
+            death_female = float(self.female_death_entry.get())
+
+            days = float(self.days_entry.get())
+            experiment_name = self.experiment_name_entry.get()
+
+            # Отримуємо кількість одужавших
+            recovered_population = float(self.recovered_population_entry.get())
+
+            # Відсотки населення
+            male_percent = round((male / population) * 100, 2)
+            female_percent = round((female / population) * 100, 2)
+
+            children_percent = round((children / population) * 100, 2)
+            youth_percent = round((youth / population) * 100, 2)
+            middle_percent = round((middle / population) * 100, 2)
+            senior_percent = round((senior / population) * 100, 2)
+
+            # Летальність (%) за віком
+            death_rate_children = round((death_children / infected_children) * 100, 2) if infected_children > 0 else 0
+            death_rate_youth = round((death_youth / infected_youth) * 100, 2) if infected_youth > 0 else 0
+            death_rate_middle = round((death_middle / infected_middle) * 100, 2) if infected_middle > 0 else 0
+            death_rate_senior = round((death_senior / infected_senior) * 100, 2) if infected_senior > 0 else 0
+
+            # Обчислення коефіцієнтів зараження та одужання
+            total_infected = infected_children + infected_youth + infected_middle + infected_senior
+            total_deaths = death_children + death_youth + death_middle + death_senior
+            total_recovered = recovered_population
+            susceptible = population - total_infected
+
+            # Летальність (%) за статтю
+            male_mortality = round((death_male / total_deaths) * 100, 2) if total_deaths > 0 else 0
+            female_mortality = round((death_female / total_deaths) * 100, 2) if infected_female > 0 else 0
+
+            # Обчислення коефіцієнтів зараження (β) та одужання (γ)
+            beta = round(total_infected / (susceptible * days), 4) if susceptible > 0 and days > 0 else 0
+            gamma = round(total_recovered / (total_infected * days), 4) if total_infected > 0 and days > 0 else 0
 
 
-        results = parallel_simulation(
-            population_obj,
-            beta=float(self.beta_entry.get()),
-            gamma=float(self.gamma_entry.get()),
-            days=int(self.days_entry.get()),
-            children_percent=float(self.children_entry.get()),
-            young_adults_percent=float(self.young_adults_entry.get()),
-            middle_age_percent=float(self.middle_age_entry.get()),
-            senior_percent=float(self.senior_entry.get()),
-            death_rate_children=float(self.death_rate_children_entry.get()),
-            death_rate_young_adults=float(self.death_rate_young_adults_entry.get()),
-            death_rate_middle_age=float(self.death_rate_middle_age_entry.get()),
-            death_rate_senior=float(self.death_rate_senior_entry.get()),
-            vaccination=float(self.vaccine_percent_entry.get()),
-            quarantine=float(self.quarantine_percent_entry.get()), 
-            vaccine_infection_reduction=vaccine_infection_reduction,
-            vaccine_mortality_reduction=vaccine_mortality_reduction,
-            quarantine_infection_reduction=quarantine_infection_reduction,
-            quarantine_mortality_reduction=quarantine_mortality_reduction,
-            num_processes=8
-        )
+            # Збереження у файл temp/calculate_parameters.txt
+            output_file = "temp/calculate_parameters.txt"
+            with open(output_file, "w", encoding="utf-8") as f:
+                f.write(f"Назва експерименту: {experiment_name}\n")
+                f.write(f"Популяція: {population}\n")
+                f.write(f"% чоловіків: {male_percent}%\n")
+                f.write(f"% жінок: {female_percent}%\n")
+                f.write(f"% дітей (0–14 років): {children_percent}%\n")
+                f.write(f"% молодь (15–34 років): {youth_percent}%\n")
+                f.write(f"% середній вік (35–64): {middle_percent}%\n")
+                f.write(f"% похилі (65+): {senior_percent}%\n")
+                f.write(f"Коеф. зараження (β): {beta}\n")
+                f.write(f"Коеф. одужання (γ): {gamma}\n")
+                f.write(f"Кількість днів: {days}\n")
+                f.write(f"Летальність дітей (%): {death_rate_children}%\n")
+                f.write(f"Летальність молодих (%): {death_rate_youth}%\n")
+                f.write(f"Летальність середнього віку (%): {death_rate_middle}%\n")
+                f.write(f"Летальність похилого віку (%): {death_rate_senior}%\n")
+                f.write(f"Смертність чоловіків (%): {male_mortality}%\n")
+                f.write(f"Смертність жінок (%): {female_mortality}%\n")
 
-        # Отримуємо всі значення з результатів
-        final_susceptible, final_infected, final_recovered, final_deaths, total_mortality, children_mortality, \
-        young_adults_mortality, middle_age_mortality, senior_mortality, vaccination_impact, vaccination_mortality_impact, \
-        quarantine_impact, quarantine_mortality_impact = results
+            messagebox.showinfo("Успіх", f"Параметри збережено у файл:\n{output_file}")
 
-        # Проводимо візуалізацію результатів
-        plot_results(final_susceptible, final_infected, final_recovered, final_deaths, save_path=TEMP_GRAPH_PATH)
+        except Exception as e:
+            messagebox.showerror("Помилка", f"Помилка при обчисленні параметрів:\n{e}")
 
-        result_window = Toplevel(self.root)
-        result_window.title("Результати симуляції")
-        result_window.config(bg="#f4f4f4")
-        self.center_window(result_window, 1000, 850)
+    def load_parameters(self):
+        file_path = filedialog.askopenfilename(title="Виберіть файл з параметрами", filetypes=[("Text files", "*.txt")])
 
-        # Розміщення заголовка
-        self.create_label(result_window, "Результати симуляції:", 14)
+        if not file_path:
+            return  # Користувач скасував вибір файлу
 
-        # Розміщення зображення
-        img = tk.PhotoImage(file=TEMP_GRAPH_PATH)
-        img_label = Label(result_window, image=img)
-        img_label.image = img
-        img_label.grid(row=1, column=0, padx=10, pady=10)
+        with open(file_path, 'r') as file:
+            parameters = file.readlines()
 
-        # Формуємо текстові результати
-        text_result = f"Experiment: {self.experiment_name_entry.get()}\n"
-        text_result += f"Population: {self.population_entry.get()}, β: {self.beta_entry.get()}, γ: {self.gamma_entry.get()}, Days: {self.days_entry.get()}\n"
-        text_result += f"Max infected: {int(self.max_infected)} on day {self.max_infected_day}\n"
-        text_result += f"Total infected during the period: {int(self.total_infected)}\n"
+        if len(parameters) < 4:
+            messagebox.showerror("Помилка", "Файл має містити мінімум 4 рядки параметрів.")
+            return
 
-        # Мортальність
-        text_result += f"Total mortality: {round(total_mortality):.0f} people ({round(total_mortality * 100 / float(self.population_entry.get())):.2f}%)\n"
-        text_result += f"Children mortality: {round(children_mortality):.0f} people ({round(children_mortality * 100 / population_obj.children):.2f}%)\n"
-        text_result += f"Younger adults mortality: {round(young_adults_mortality):.0f} people ({round(young_adults_mortality * 100 / population_obj.young_adults):.2f}%)\n"
-        text_result += f"Middle-aged mortality: {round(middle_age_mortality):.0f} people ({round(middle_age_mortality * 100 / population_obj.middle_aged):.2f}%)\n"
-        text_result += f"Seniors mortality: {round(senior_mortality):.0f} people ({round(senior_mortality * 100 / population_obj.senior):.2f}%)\n"
+        # Переходимо на екран налаштувань симуляції, якщо ще не там
+        self.show_simulation_settings()
 
-        # Вплив вакцинації та карантину
-        text_result += f"Vaccination rate: {round(vaccination_value * 100, 2):.2f}%\n"
-        text_result += f"Impact of vaccination on infection: {round(vaccination_impact, 2):.2f}% reduction\n"
-        text_result += f"Impact of vaccination on mortality: {round(vaccination_mortality_impact, 2):.2f}% reduction\n"
+        # Тепер можна безпечно заповнювати поля
+        self.population_entry.delete(0, tk.END)
+        self.population_entry.insert(0, parameters[0].strip())
 
-        text_result += f"Quarantine measures applied: {round(quarantine_value * 100, 2):.2f}%\n"
-        text_result += f"Impact of quarantine on infection: {round(quarantine_impact, 2):.2f}% reduction\n"
-        text_result += f"Impact of quarantine on mortality: {round(quarantine_mortality_impact, 2):.2f}% reduction\n"
+        self.beta_entry.delete(0, tk.END)
+        self.beta_entry.insert(0, parameters[1].strip())
 
+        self.gamma_entry.delete(0, tk.END)
+        self.gamma_entry.insert(0, parameters[2].strip())
 
-        # Розміщення тексту результату
-        result_text_label = tk.Label(result_window, text=text_result, font=("Arial", 12), bg="#f4f4f4", justify="left")
-        result_text_label.grid(row=2, column=0, padx=10, pady=10)
+        self.days_entry.delete(0, tk.END)
+        self.days_entry.insert(0, parameters[3].strip())
 
-        # Розміщення кнопки для збереження результатів
-        save_button = self.create_button(result_window, "Зберегти в PDF", lambda: self.save_results(result_window))
-        save_button.grid(row=3, column=0, pady=10)
-
+        messagebox.showinfo("Готово", "Параметри завантажено успішно!")
 
     def save_results(self, result_window):
         experiment_name = self.experiment_name_entry.get()
@@ -457,7 +500,6 @@ class SimulationApp:
         messagebox.showinfo("Збережено", "Результати збережено у PDF.")
 
         result_window.destroy() 
-
 
     def run(self):
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
