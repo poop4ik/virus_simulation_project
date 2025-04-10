@@ -41,12 +41,12 @@ def plot_gender_distribution(male_total, female_total):
 
 
 def plot_gender_mortality(male_dead, female_dead):
-    """
-    Показує розподіл смертності за статтю з відображенням відсотків і абсолютної кількості.
-    """
     labels = ['Чоловіки', 'Жінки']
     sizes = [male_dead, female_dead]
     total = male_dead + female_dead
+
+    if total == 0:
+        return
 
     def autopct_format(pct):
         val = int(np.round(pct * total / 100.0))
@@ -58,6 +58,7 @@ def plot_gender_mortality(male_dead, female_dead):
     plt.axis('equal')
     plt.savefig(os.path.join("temp", "gender_mortality.png"))
     plt.close()
+
 
 
 def plot_age_mortality(age_deaths):

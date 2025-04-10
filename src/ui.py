@@ -38,8 +38,8 @@ class SimulationApp:
             widget.destroy()
 
         # Встановлюємо розмір і центруємо
-        self.root.geometry("400x250")
-        self.center_window(self.root, 400, 250)
+        self.root.geometry("400x300")
+        self.center_window(self.root, 400, 300)
 
         # Контейнер для всіх елементів
         main_frame = tk.Frame(self.root, bg="#f4f4f4")
@@ -74,11 +74,19 @@ class SimulationApp:
 
         btn3 = tk.Button(
             main_frame,
+            text="Обрахувати коефіціенти",
+            command=self.show_calculate_factors_settings,
+            font=("Arial", 12)
+        )
+        btn3.grid(row=3, column=0, sticky="we", pady=10)
+
+        btn4 = tk.Button(
+            main_frame,
             text="Завантажити параметри",
             command=self.load_parameters,
             font=("Arial", 12)
         )
-        btn3.grid(row=3, column=0, sticky="we", pady=10)
+        btn4.grid(row=4, column=0, sticky="we", pady=10)
 
     def show_simulation_settings(self):
         # Очищаємо вікно
@@ -107,25 +115,25 @@ class SimulationApp:
             ("Популяція",                         "population_entry",                       "1000"),
             ("% чоловіків",                       "male_entry",                             "60"),
             ("% жінок",                           "female_entry",                           "40"),
-            ("% дітей (0–14 років)",              "children_entry",                         "20"),
-            ("% молодь (15–34 років)",            "young_adults_entry",                     "35"),
+            ("% дітей (0–14 років)",              "children_entry",                         "25"),
+            ("% молодь (15–34 років)",            "young_adults_entry",                     "25"),
             ("% середній вік (35–64)",            "middle_age_entry",                       "25"),
-            ("% похилі (65+)",                    "senior_entry",                           "20"),
+            ("% похилі (65+)",                    "senior_entry",                           "25"),
             ("Коеф. зараження (β)",               "beta_entry",                             "0.4"),
             ("Коеф. одужання (γ)",                "gamma_entry",                            "0.1"),
             ("Кількість днів",                    "days_entry",                             "100"),
-            ("Летальність дітей (%)",             "death_rate_children_entry",              "8"),
-            ("Летальність молодих (%)",           "death_rate_young_adults_entry",          "5"),
+            ("Летальність дітей (%)",             "death_rate_children_entry",              "7"),
+            ("Летальність молодих (%)",           "death_rate_young_adults_entry",          "4"),
             ("Летальність середнього віку (%)",   "death_rate_middle_age_entry",            "6"),
             ("Летальність похилого віку (%)",     "death_rate_senior_entry",                "10"),
-            ("Смертність чоловіків (%)",          "male_mortality_entry",                   "8"),
-            ("Смертність жінок (%)",              "female_mortality_entry",                 "6"),
-            ("Вакцинація (%)",                    "vaccine_percent_entry",                  "20"),
-            ("Карантин (%)",                      "quarantine_percent_entry",               "20"),
-            ("↓ інфікування вакциною (%)",        "vaccine_infection_reduction_entry",      "60"),
-            ("↓ смертність вакциною (%)",         "vaccine_mortality_reduction_entry",      "50"),
-            ("↓ інфікування карантином (%)",      "quarantine_infection_reduction_entry",   "70"),
-            ("↓ смертність карантином (%)",       "quarantine_mortality_reduction_entry",   "30"),
+            ("Смертність чоловіків (%)",          "male_mortality_entry",                   "70"),
+            ("Смертність жінок (%)",              "female_mortality_entry",                 "30"),
+            ("Вакцинація (%)",                    "vaccine_percent_entry",                  "0"),
+            ("Карантин (%)",                      "quarantine_percent_entry",               "0"),
+            ("↓ інфікування вакциною (%)",        "vaccine_infection_reduction_entry",      "0"),
+            ("↓ смертність вакциною (%)",         "vaccine_mortality_reduction_entry",      "0"),
+            ("↓ інфікування карантином (%)",      "quarantine_infection_reduction_entry",   "0"),
+            ("↓ смертність карантином (%)",       "quarantine_mortality_reduction_entry",   "0"),
         ]
 
         for idx, (text, attr, default) in enumerate(fields):
@@ -282,19 +290,16 @@ class SimulationApp:
 
         # Поля введення: (текст, назва атрибуту, значення за замовчуванням)
         fields = [
-            ("Назва експерименту",                   "experiment_name_entry",        "Test_Calculation"),
             ("Кількість людей",                      "population_entry",             "1000"),
             
             ("Кількість чоловіків",                  "male_population_entry",        "700"),
             ("Кількість жінок",                      "female_population_entry",      "300"),
 
             # Розподіл по вікових групах (у сумі = популяція)
-            ("Кількість дітей (0–14 років)",         "children_population_entry",    "200"),
-            ("Кількість молодь (15–34 років)",       "youth_population_entry",       "300"),
-            ("Кількість середній вік (35–64)",       "middle_population_entry",      "300"),
-            ("Кількість похилі (65+)",               "senior_population_entry",      "200"),
-
-            ("Кількість днів",                       "days_entry",                   "100"),
+            ("Кількість дітей (0–14 років)",         "children_population_entry",    "250"),
+            ("Кількість молодь (15–34 років)",       "youth_population_entry",       "250"),
+            ("Кількість середній вік (35–64)",       "middle_population_entry",      "250"),
+            ("Кількість похилі (65+)",               "senior_population_entry",      "250"),
     
             # Захворюваність за статтю           
             ("Захворіло чоловіків",                  "infected_male_entry",          "350"),
@@ -311,14 +316,10 @@ class SimulationApp:
             ("Померло жінок",                     "female_death_entry",           "20"),
 
             # Смертність за віковими групами
-            ("Померло дітей (0–14)",              "death_children_entry",         "10"),
+            ("Померло дітей (0–14)",              "death_children_entry",         "15"),
             ("Померло молодь (15–34)",            "death_youth_entry",            "10"),
             ("Померло середній вік (35–64)",      "death_middle_entry",           "10"),
-            ("Померло похилі (65+)",              "death_senior_entry",           "20"),
-
-            # Додаємо нове поле для вводу кількості одужавших
-            ("Кількість одужавших",                  "recovered_population_entry",   "200"),
-
+            ("Померло похилі (65+)",              "death_senior_entry",           "15"),
         ]
 
 
@@ -352,24 +353,11 @@ class SimulationApp:
         btn_back.grid(row=0, column=2, padx=(5, 10), pady=5, sticky="we")
         
     def save_calculation_parameters(self):
-        parameters = {
-            "Назва експерименту": getattr(self, "experiment_name_entry").get(),
-            "Кількість людей": getattr(self, "population_entry").get(),
-            "Захворіло чоловіків": getattr(self, "infected_male_entry").get(),
-            "Захворіло жінок": getattr(self, "infected_female_entry").get(),
-            "Захворіло дітей": getattr(self, "infected_children_entry").get(),
-            "Захворіло дорослих": getattr(self, "infected_adults_entry").get(),
-            "Смертність чоловіків (%)": getattr(self, "male_death_entry").get(),
-            "Смертність жінок (%)": getattr(self, "female_death_entry").get(),
-            "Смертність дітей (%)": getattr(self, "children_death_entry").get(),
-            "Смертність дорослих (%)": getattr(self, "adults_death_entry").get(),
-            "Кількість інфікованих": getattr(self, "total_infected_entry").get(),
-            "Кількість днів": getattr(self, "days_entry").get(),
-        }
+        file_path = filedialog.askopenfilename(title="Виберіть файл з параметрами", filetypes=[("Text files", "*.txt")])
+
 
     def calculate_parameters(self):
         try:
-            # Отримуємо значення з полів
             population = float(self.population_entry.get())
             male = float(self.male_population_entry.get())
             female = float(self.female_population_entry.get())
@@ -394,13 +382,6 @@ class SimulationApp:
             death_male = float(self.male_death_entry.get())
             death_female = float(self.female_death_entry.get())
 
-            days = float(self.days_entry.get())
-            experiment_name = self.experiment_name_entry.get()
-
-            # Отримуємо кількість одужавших
-            recovered_population = float(self.recovered_population_entry.get())
-
-            # Відсотки населення
             male_percent = round((male / population) * 100, 2)
             female_percent = round((female / population) * 100, 2)
 
@@ -409,31 +390,18 @@ class SimulationApp:
             middle_percent = round((middle / population) * 100, 2)
             senior_percent = round((senior / population) * 100, 2)
 
-            # Летальність (%) за віком
             death_rate_children = round((death_children / infected_children) * 100, 2) if infected_children > 0 else 0
             death_rate_youth = round((death_youth / infected_youth) * 100, 2) if infected_youth > 0 else 0
             death_rate_middle = round((death_middle / infected_middle) * 100, 2) if infected_middle > 0 else 0
             death_rate_senior = round((death_senior / infected_senior) * 100, 2) if infected_senior > 0 else 0
 
-            # Обчислення коефіцієнтів зараження та одужання
-            total_infected = infected_children + infected_youth + infected_middle + infected_senior
             total_deaths = death_children + death_youth + death_middle + death_senior
-            total_recovered = recovered_population
-            susceptible = population - total_infected
-
-            # Летальність (%) за статтю
             male_mortality = round((death_male / total_deaths) * 100, 2) if total_deaths > 0 else 0
-            female_mortality = round((death_female / total_deaths) * 100, 2) if infected_female > 0 else 0
-
-            # Обчислення коефіцієнтів зараження (β) та одужання (γ)
-            beta = round(total_infected / (susceptible * days), 4) if susceptible > 0 and days > 0 else 0
-            gamma = round(total_recovered / (total_infected * days), 4) if total_infected > 0 and days > 0 else 0
-
+            female_mortality = round((death_female / total_deaths) * 100, 2) if total_deaths > 0 else 0
 
             # Збереження у файл temp/calculate_parameters.txt
             output_file = "temp/calculate_parameters.txt"
             with open(output_file, "w", encoding="utf-8") as f:
-                f.write(f"Назва експерименту: {experiment_name}\n")
                 f.write(f"Популяція: {population}\n")
                 f.write(f"% чоловіків: {male_percent}%\n")
                 f.write(f"% жінок: {female_percent}%\n")
@@ -441,9 +409,6 @@ class SimulationApp:
                 f.write(f"% молодь (15–34 років): {youth_percent}%\n")
                 f.write(f"% середній вік (35–64): {middle_percent}%\n")
                 f.write(f"% похилі (65+): {senior_percent}%\n")
-                f.write(f"Коеф. зараження (β): {beta}\n")
-                f.write(f"Коеф. одужання (γ): {gamma}\n")
-                f.write(f"Кількість днів: {days}\n")
                 f.write(f"Летальність дітей (%): {death_rate_children}%\n")
                 f.write(f"Летальність молодих (%): {death_rate_youth}%\n")
                 f.write(f"Летальність середнього віку (%): {death_rate_middle}%\n")
@@ -451,11 +416,83 @@ class SimulationApp:
                 f.write(f"Смертність чоловіків (%): {male_mortality}%\n")
                 f.write(f"Смертність жінок (%): {female_mortality}%\n")
 
-            messagebox.showinfo("Успіх", f"Параметри збережено у файл:\n{output_file}")
+            messagebox.showinfo("Успіх", f"Параметри успішно обчислено")
 
         except Exception as e:
             messagebox.showerror("Помилка", f"Помилка при обчисленні параметрів:\n{e}")
 
+    
+    def show_calculate_factors_settings(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+        self.root.geometry("800x700")
+        self.center_window(self.root, 800, 700)
+
+        outer_frame = tk.Frame(self.root, bg="#f4f4f4")
+        outer_frame.pack(fill="both", expand=True, padx=10, pady=20)
+
+        settings_frame = tk.Frame(outer_frame, bg="#f4f4f4")
+        settings_frame.pack(fill="both", expand=True)
+
+        for col in range(3):
+            settings_frame.grid_columnconfigure(col, weight=1, uniform="col")
+
+        fields = [
+            ("Кількість контактів на день", "entry_contacts", "10"),
+            ("Ймовірність зараження при контакті (0–1)", "entry_infection_prob", "0.2"),
+            ("Середня тривалість хвороби (днів)", "entry_disease_duration", "10")
+        ]
+
+        for idx, (text, attr, default) in enumerate(fields):
+            col = idx % 3
+            row = (idx // 3) * 2
+            padx = (10, 5) if col == 0 else (10, 10) if col == 1 else (5, 10)
+
+            lbl = tk.Label(settings_frame, text=text, font=("Arial", 10), bg="#f4f4f4")
+            lbl.grid(row=row, column=col, padx=padx, pady=(10, 0), sticky="w")
+            entry = tk.Entry(settings_frame, font=("Arial", 10), bd=2, relief="solid")
+            entry.insert(0, default)
+            entry.grid(row=row+1, column=col, padx=padx, pady=(0, 10), sticky="we")
+            setattr(self, attr, entry)
+
+        buttons_frame = tk.Frame(outer_frame, bg="#f4f4f4")
+        buttons_frame.pack(fill="x", pady=10)
+        for col in range(3):
+            buttons_frame.grid_columnconfigure(col, weight=1, uniform="btn")
+
+        btn_calc = tk.Button(buttons_frame, text="Обрахувати коефіцієнти", command=self.calculate_factors, height=2)
+        btn_save = tk.Button(buttons_frame, text="Зберегти коефіцієнти", command=self.save_calculation_factors, height=2)
+        btn_back = tk.Button(buttons_frame, text="Назад", command=self.show_main_menu, height=2)
+        btn_calc.grid(row=0, column=0, padx=(10, 5), pady=5, sticky="we")
+        btn_save.grid(row=0, column=1, padx=(5, 5), pady=5, sticky="we")
+        btn_back.grid(row=0, column=2, padx=(5, 10), pady=5, sticky="we")
+
+
+    def save_calculation_factors(self):
+        file_path = filedialog.askopenfilename(title="Виберіть файл з параметрами", filetypes=[("Text files", "*.txt")])
+
+
+    def calculate_factors(self):
+        try:
+            contacts_per_day = float(self.entry_contacts.get())
+            infection_prob = float(self.entry_infection_prob.get())
+            duration = float(self.entry_disease_duration.get())
+
+            beta = contacts_per_day * infection_prob * 0.1
+            gamma = 1 / duration
+
+            output_file = "temp/calculate_factors.txt"
+            with open(output_file, "w", encoding="utf-8") as f:
+                f.write(f"Коефіцієнт зараження (β): {beta:.1f}\n")
+                f.write(f"Коефіцієнт одужання (γ): {gamma:.1f}\n")
+
+            messagebox.showinfo("Успіх", f"Коефіцієнти успішно обчислені:\n")
+
+        except Exception as e:
+            messagebox.showerror("Помилка", f"Помилка при обчисленні коефіцієнтів:\n{e}")
+
+    
     def load_parameters(self):
         file_path = filedialog.askopenfilename(title="Виберіть файл з параметрами", filetypes=[("Text files", "*.txt")])
 

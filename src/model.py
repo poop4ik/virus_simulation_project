@@ -75,6 +75,10 @@ class Population:
         reduction_inf = v_inf_eff * v_cov + q_inf_eff * q_cov
         effective_beta = beta * max(1 - reduction_inf, 0)
 
+        # --- НОВА ЧАСТИНА: рахуємо загальну кількість інфікованих у всіх групах ---
+        total_infected = sum(data["infected"] for data in self.groups.values())
+        # ------------------------------------------------------------------------
+
         for group, data in self.groups.items():
             s = data["susceptible"]
             i = data["infected"]
@@ -86,7 +90,9 @@ class Population:
             reduction_mort = v_mort_eff * v_cov + q_mort_eff * q_cov
             effective_mort_rate = mortality_rate * max(1 - reduction_mort, 0)
 
-            new_infected = effective_beta * s * i / total if total > 0 else 0
+            # Замість i/total беремо total_infected/self.total_population
+            new_infected = effective_beta * s * total_infected / self.total_population if self.total_population > 0 else 0
+
             new_recovered = gamma * i
             new_dead = (effective_mort_rate / 100) * i
 
@@ -110,6 +116,7 @@ class Population:
             self.groups[group]["dead"] = d_new
 
         return local_results
+
 
     def calculate_effectiveness(self, vaccine_percent, quarantine_percent,
                                 vaccine_infection_reduction, vaccine_mortality_reduction,

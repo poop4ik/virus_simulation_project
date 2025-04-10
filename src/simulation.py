@@ -6,19 +6,33 @@ import os
 def compute_group_gender_deaths(group_dead, population):
     """
     Обчислює кількість смертних за статтю для даної групи.
-    Використовується наступна формула:
-      male_weight = (male_percent/100) * male_mort_rate
-      female_weight = (female_percent/100) * female_mort_rate
-      Розподіл:
-         group_male_dead = round(group_dead * (male_weight / (male_weight + female_weight)))
-         group_female_dead = group_dead - group_male_dead
+    Формула:
+      male_weight = (male_percent / 100) * male_mort_rate
+      female_weight = (female_percent / 100) * female_mort_rate
+      group_male_dead = round(group_dead * (male_weight / (male_weight + female_weight)))
+      group_female_dead = group_dead - group_male_dead
     """
     male_weight = (population.male_percent / 100) * population.male_mort_rate
     female_weight = (population.female_percent / 100) * population.female_mort_rate
     total_weight = male_weight + female_weight
+
+    if total_weight == 0:
+        # Немає смертності у жодної статі
+        return 0, 0
+
+    if male_weight == 0:
+        # Вся смертність у жінок
+        return 0, int(group_dead)
+
+    if female_weight == 0:
+        # Вся смертність у чоловіків
+        return int(group_dead), 0
+
+    # Стандартний випадок
     group_male_dead = int(np.round(group_dead * (male_weight / total_weight)))
     group_female_dead = group_dead - group_male_dead
     return group_male_dead, group_female_dead
+
 
 def parallel_simulation(population, beta, gamma, days, num_processes,
                         vaccine_percent, vaccine_infection_reduction, vaccine_mortality_reduction,
