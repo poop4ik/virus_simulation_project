@@ -1,13 +1,15 @@
 # ui.py
 import tkinter as tk
 from tkinter import filedialog, messagebox, Toplevel, Label, Button
+import re
 import os
 from simulation import parallel_simulation
 from visualisation import plot_results
 from save_results import save_results_to_pdf
 import numpy as np
 from model import Population
-
+from save_results import save_results_to_pdf
+import shutil
 
 RESULTS_DIR = "data"
 TEMP_GRAPH_PATH = os.path.join(RESULTS_DIR, "temp_graph.png")
@@ -128,12 +130,12 @@ class SimulationApp:
             ("Летальність похилого віку (%)",     "death_rate_senior_entry",                "10"),
             ("Смертність чоловіків (%)",          "male_mortality_entry",                   "70"),
             ("Смертність жінок (%)",              "female_mortality_entry",                 "30"),
-            ("Вакцинація (%)",                    "vaccine_percent_entry",                  "0"),
-            ("Карантин (%)",                      "quarantine_percent_entry",               "0"),
-            ("↓ інфікування вакциною (%)",        "vaccine_infection_reduction_entry",      "0"),
-            ("↓ смертність вакциною (%)",         "vaccine_mortality_reduction_entry",      "0"),
-            ("↓ інфікування карантином (%)",      "quarantine_infection_reduction_entry",   "0"),
-            ("↓ смертність карантином (%)",       "quarantine_mortality_reduction_entry",   "0"),
+            ("Вакцинація (%)",                    "vaccine_percent_entry",                  "10"),
+            ("Карантин (%)",                      "quarantine_percent_entry",               "10"),
+            ("↓ інфікування вакциною (%)",        "vaccine_infection_reduction_entry",      "40"),
+            ("↓ смертність вакциною (%)",         "vaccine_mortality_reduction_entry",      "30"),
+            ("↓ інфікування карантином (%)",      "quarantine_infection_reduction_entry",   "50"),
+            ("↓ смертність карантином (%)",       "quarantine_mortality_reduction_entry",   "40"),
         ]
 
         for idx, (text, attr, default) in enumerate(fields):
@@ -165,7 +167,7 @@ class SimulationApp:
             buttons_frame.grid_columnconfigure(col, weight=1, uniform="btn")
 
         btn_run  = tk.Button(buttons_frame, text="Запустити симуляцію",    command=self.run_simulation,    height=2)
-        btn_view = tk.Button(buttons_frame, text="Переглянути результати", command=self.show_results,      height=2)
+        btn_view = tk.Button(buttons_frame, text="Зберегти результати та параметри", command=self.save_results,      height=2)
         btn_back = tk.Button(buttons_frame, text="Назад",                  command=self.show_main_menu,    height=2)
 
         btn_run .grid(row=0, column=0, padx=(10, 5), pady=5, sticky="we")
@@ -175,30 +177,26 @@ class SimulationApp:
 
 
     def run_simulation(self):
-        # Отримуємо ім'я експерименту
+        if not self.validate_parameters():
+            return
+
         experiment_name = self.experiment_name_entry.get()
 
-        # Отримуємо загальну кількість людей
         total_population = int(self.population_entry.get())
 
-        # Отримуємо відсотки за статтю
         male_percent = float(self.male_entry.get())
         female_percent = float(self.female_entry.get())
 
-        # Отримуємо відсотки вікових груп
         children_percentage = float(self.children_entry.get())
         young_adults_percentage = float(self.young_adults_entry.get())
         middle_age_percentage = float(self.middle_age_entry.get())
         senior_percentage = float(self.senior_entry.get())
 
-        # Отримуємо коефіцієнти зараження та одужання
         beta = float(self.beta_entry.get())
         gamma = float(self.gamma_entry.get())
 
-        # Отримуємо кількість днів симуляції
         days = int(self.days_entry.get())
 
-        # Отримуємо коефіцієнти летальності для кожної вікової групи
         death_rate_children = float(self.death_rate_children_entry.get())
         death_rate_young_adults = float(self.death_rate_young_adults_entry.get())
         death_rate_middle_age = float(self.death_rate_middle_age_entry.get())
@@ -207,7 +205,6 @@ class SimulationApp:
         male_mortality = float(self.male_mortality_entry.get())
         female_mortality = float(self.female_mortality_entry.get())
 
-        # Отримуємо дані щодо вакцинації та карантину
         vaccine_percent = float(self.vaccine_percent_entry.get())
         quarantine_percent = float(self.quarantine_percent_entry.get())
         vaccine_infection_reduction = float(self.vaccine_infection_reduction_entry.get())
@@ -242,7 +239,8 @@ class SimulationApp:
             plot_cumulative_infected,
             plot_peak_infected,
             plot_gender_distribution,
-            plot_age_gender_mortality
+            plot_age_gender_mortality,
+            plot_infection_durations
         )
     
         plot_results(
@@ -256,16 +254,43 @@ class SimulationApp:
         plot_gender_mortality(*data['gender_deaths'])
         plot_cumulative_infected(data['cumulative_infected'], days)
         plot_peak_infected(data['infected'], data['peak'][1])
-    
-        # Нові графіки, які раніше вимагали додаткових обчислень
         plot_gender_distribution(*data['population_gender'])
         plot_age_gender_mortality(data['age_gender_deaths'])
+        plot_infection_durations(data['infection_durations'])
 
-   
-    def show_results(self):
-        if not os.path.exists(TEMP_GRAPH_PATH):
-            messagebox.showerror("Помилка", "Немає збережених результатів!")
-            return
+
+    def save_parameters_to_txt(self):
+        parameters_txt_path = os.path.join(RESULTS_DIR, "simulation_parameters.txt")
+
+        with open(parameters_txt_path, "w", encoding="utf-8") as f:
+         f.write(f"Назва експерименту: {self.experiment_name_entry.get()}\n")
+         f.write(f"Популяція: {self.population_entry.get()}\n")
+         f.write(f"% чоловіків: {self.male_entry.get()}\n")
+         f.write(f"% жінок: {self.female_entry.get()}\n")
+         f.write(f"% дітей (0–14 років): {self.children_entry.get()}\n")
+         f.write(f"% молодь (15–34 років): {self.young_adults_entry.get()}\n")
+         f.write(f"% середній вік (35–64): {self.middle_age_entry.get()}\n")
+         f.write(f"% похилі (65+): {self.senior_entry.get()}\n")
+         f.write(f"Коеф. зараження (β): {self.beta_entry.get()}\n")
+         f.write(f"Коеф. одужання (γ): {self.gamma_entry.get()}\n")
+         f.write(f"Кількість днів: {self.days_entry.get()}\n")
+         f.write(f"Летальність дітей (%): {self.death_rate_children_entry.get()}\n")
+         f.write(f"Летальність молодих (%): {self.death_rate_young_adults_entry.get()}\n")
+         f.write(f"Летальність середнього віку (%): {self.death_rate_middle_age_entry.get()}\n")
+         f.write(f"Летальність похилого віку (%): {self.death_rate_senior_entry.get()}\n")
+         f.write(f"Смертність чоловіків (%): {self.male_mortality_entry.get()}\n")
+         f.write(f"Смертність жінок (%): {self.female_mortality_entry.get()}\n")
+         f.write(f"Вакцинація (%): {self.vaccine_percent_entry.get()}\n")
+         f.write(f"Карантин (%): {self.quarantine_percent_entry.get()}\n")
+         f.write(f"↓ інфікування вакциною (%): {self.vaccine_infection_reduction_entry.get()}\n")
+         f.write(f"↓ смертність вакциною (%): {self.vaccine_mortality_reduction_entry.get()}\n")
+         f.write(f"↓ інфікування карантином (%): {self.quarantine_infection_reduction_entry.get()}\n")
+         f.write(f"↓ смертність карантином (%): {self.quarantine_mortality_reduction_entry.get()}\n")
+
+    def save_results(self):
+        self.save_parameters_to_txt()
+        pdf_path = save_results_to_pdf()
+        messagebox.showinfo("Збережено", f"Результати збережено в data/")
 
     def show_calculate_parameters_settings(self):
         # Очищаємо вікно від попередніх віджетів
@@ -353,10 +378,24 @@ class SimulationApp:
         btn_back.grid(row=0, column=2, padx=(5, 10), pady=5, sticky="we")
         
     def save_calculation_parameters(self):
-        file_path = filedialog.askopenfilename(title="Виберіть файл з параметрами", filetypes=[("Text files", "*.txt")])
+        source_file = os.path.join("temp", "calculate_parameters.txt")
+        destination_file = os.path.join("data", "calculate_parameters.txt")
+
+        try:
+            if os.path.exists(source_file):
+                shutil.copy(source_file, destination_file)
+
+                messagebox.showinfo("Успіх", "Файл успішно збережно в 'data/calculate_parameters.txt.txt'")
+            else:
+                messagebox.showerror("Помилка", f"Файл не знайдений: {source_file}")
+        except Exception as e:
+            messagebox.showerror("Помилка", f"Не вдалося зберегти файл: {e}")
 
 
     def calculate_parameters(self):
+        if not self.validate_parameters_for_calculate():
+            return
+
         try:
             population = float(self.population_entry.get())
             male = float(self.male_population_entry.get())
@@ -440,7 +479,7 @@ class SimulationApp:
 
         fields = [
             ("Кількість контактів на день", "entry_contacts", "10"),
-            ("Ймовірність зараження при контакті (0–1)", "entry_infection_prob", "0.2"),
+            ("Ймовірність зараження при контакті 0–1", "entry_infection_prob", "0.2"),
             ("Середня тривалість хвороби (днів)", "entry_disease_duration", "10")
         ]
 
@@ -470,10 +509,25 @@ class SimulationApp:
 
 
     def save_calculation_factors(self):
-        file_path = filedialog.askopenfilename(title="Виберіть файл з параметрами", filetypes=[("Text files", "*.txt")])
+        source_file = os.path.join("temp", "calculate_factors.txt")
+        destination_file = os.path.join("data", "calculate_factors.txt")
+
+        try:
+            if os.path.exists(source_file):
+                shutil.copy(source_file, destination_file)
+
+                messagebox.showinfo("Успіх", "Файл успішно збережно в 'data/calculate_factors.txt'")
+            else:
+                messagebox.showerror("Помилка", f"Файл не знайдений: {source_file}")
+        except Exception as e:
+            messagebox.showerror("Помилка", f"Не вдалося зберегти файл: {e}")
+
 
 
     def calculate_factors(self):
+        if not self.validate_factors():
+            return
+
         try:
             contacts_per_day = float(self.entry_contacts.get())
             infection_prob = float(self.entry_infection_prob.get())
@@ -484,68 +538,288 @@ class SimulationApp:
 
             output_file = "temp/calculate_factors.txt"
             with open(output_file, "w", encoding="utf-8") as f:
-                f.write(f"Коефіцієнт зараження (β): {beta:.1f}\n")
-                f.write(f"Коефіцієнт одужання (γ): {gamma:.1f}\n")
+                f.write(f"Коефіцієнт зараження (β): {beta:.2f}\n")
+                f.write(f"Коефіцієнт одужання (γ): {gamma:.2f}\n")
 
             messagebox.showinfo("Успіх", f"Коефіцієнти успішно обчислені:\n")
 
         except Exception as e:
             messagebox.showerror("Помилка", f"Помилка при обчисленні коефіцієнтів:\n{e}")
 
-    
     def load_parameters(self):
-        file_path = filedialog.askopenfilename(title="Виберіть файл з параметрами", filetypes=[("Text files", "*.txt")])
+        # Відкриваємо діалогове вікно для вибору файлу
+        file_path = filedialog.askopenfilename(
+            title="Виберіть файл з параметрами",
+            filetypes=[("Text files", "*.txt")]
+        )
 
-        if not file_path:
-            return  # Користувач скасував вибір файлу
+        if file_path:
+            if os.path.exists(file_path):
+                with open(file_path, "r", encoding="utf-8") as f:
+                    lines = f.readlines()
 
-        with open(file_path, 'r') as file:
-            parameters = file.readlines()
+                # Використовуємо регулярні вирази для отримання лише чисел
+                def extract_number(line):
+                    match = re.search(r"\d+(\.\d+)?", line)  # шукаємо ціле або дробове число
+                    return match.group(0) if match else None
 
-        if len(parameters) < 4:
-            messagebox.showerror("Помилка", "Файл має містити мінімум 4 рядки параметрів.")
-            return
+                # Завантажуємо параметри з файлу
+                self.show_simulation_settings()
 
-        # Переходимо на екран налаштувань симуляції, якщо ще не там
-        self.show_simulation_settings()
+                self.experiment_name_entry.delete(0, tk.END)
+                self.experiment_name_entry.insert(0, lines[0].strip())
 
-        # Тепер можна безпечно заповнювати поля
-        self.population_entry.delete(0, tk.END)
-        self.population_entry.insert(0, parameters[0].strip())
+                self.population_entry.delete(0, tk.END)
+                self.population_entry.insert(0, extract_number(lines[1]))  # отримуємо лише число
 
-        self.beta_entry.delete(0, tk.END)
-        self.beta_entry.insert(0, parameters[1].strip())
+                self.male_entry.delete(0, tk.END)
+                self.male_entry.insert(0, extract_number(lines[2]))
 
-        self.gamma_entry.delete(0, tk.END)
-        self.gamma_entry.insert(0, parameters[2].strip())
+                self.female_entry.delete(0, tk.END)
+                self.female_entry.insert(0, extract_number(lines[3]))
 
-        self.days_entry.delete(0, tk.END)
-        self.days_entry.insert(0, parameters[3].strip())
+                self.children_entry.delete(0, tk.END)
+                self.children_entry.insert(0, extract_number(lines[4]))
 
-        messagebox.showinfo("Готово", "Параметри завантажено успішно!")
+                self.young_adults_entry.delete(0, tk.END)
+                self.young_adults_entry.insert(0, extract_number(lines[5]))
 
-    def save_results(self, result_window):
-        experiment_name = self.experiment_name_entry.get()
-        population = int(self.population_entry.get())
-        beta = float(self.beta_entry.get())
-        gamma = float(self.gamma_entry.get())
-        days = int(self.days_entry.get())
+                self.middle_age_entry.delete(0, tk.END)
+                self.middle_age_entry.insert(0, extract_number(lines[6]))
 
-        susceptible, infected, recovered = parallel_simulation(population, beta, gamma, days, 4)
-        save_results_to_pdf(experiment_name, population, beta, gamma, days, susceptible, infected, recovered)
-        self.results_saved = True
-        messagebox.showinfo("Збережено", "Результати збережено у PDF.")
+                self.senior_entry.delete(0, tk.END)
+                self.senior_entry.insert(0, extract_number(lines[7]))
 
-        result_window.destroy() 
+                self.beta_entry.delete(0, tk.END)
+                self.beta_entry.insert(0, extract_number(lines[8]))
 
-    def run(self):
-        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
-        self.root.mainloop()
+                self.gamma_entry.delete(0, tk.END)
+                self.gamma_entry.insert(0, extract_number(lines[9]))
 
-    def on_close(self):
-        if not self.results_saved and os.path.exists(TEMP_GRAPH_PATH):
-            os.remove(TEMP_GRAPH_PATH)
-        self.root.destroy()
+                self.days_entry.delete(0, tk.END)
+                self.days_entry.insert(0, extract_number(lines[10]))
+
+                self.death_rate_children_entry.delete(0, tk.END)
+                self.death_rate_children_entry.insert(0, extract_number(lines[11]))
+
+                self.death_rate_young_adults_entry.delete(0, tk.END)
+                self.death_rate_young_adults_entry.insert(0, extract_number(lines[12]))
+
+                self.death_rate_middle_age_entry.delete(0, tk.END)
+                self.death_rate_middle_age_entry.insert(0, extract_number(lines[13]))
+
+                self.death_rate_senior_entry.delete(0, tk.END)
+                self.death_rate_senior_entry.insert(0, extract_number(lines[14]))
+
+                self.male_mortality_entry.delete(0, tk.END)
+                self.male_mortality_entry.insert(0, extract_number(lines[15]))
+
+                self.female_mortality_entry.delete(0, tk.END)
+                self.female_mortality_entry.insert(0, extract_number(lines[16]))
+
+                self.vaccine_percent_entry.delete(0, tk.END)
+                self.vaccine_percent_entry.insert(0, extract_number(lines[17]))
+
+                self.quarantine_percent_entry.delete(0, tk.END)
+                self.quarantine_percent_entry.insert(0, extract_number(lines[18]))
+
+                self.vaccine_infection_reduction_entry.delete(0, tk.END)
+                self.vaccine_infection_reduction_entry.insert(0, extract_number(lines[19]))
+
+                self.vaccine_mortality_reduction_entry.delete(0, tk.END)
+                self.vaccine_mortality_reduction_entry.insert(0, extract_number(lines[20]))
+
+                self.quarantine_infection_reduction_entry.delete(0, tk.END)
+                self.quarantine_infection_reduction_entry.insert(0, extract_number(lines[21]))
+
+                self.quarantine_mortality_reduction_entry.delete(0, tk.END)
+                self.quarantine_mortality_reduction_entry.insert(0, extract_number(lines[22]))
+
+                messagebox.showinfo("Завантажено", "Параметри симуляції успішно завантажені")
+            else:
+                messagebox.showerror("Помилка", "Файл з параметрами не знайдено або він не коректний!")
+
+    def validate_parameters(self):
+        # Отримуємо значення з полів вводу
+        male_percent = self.male_entry.get()
+        female_percent = self.female_entry.get()
+        children_percent = self.children_entry.get()
+        young_adults_percent = self.young_adults_entry.get()
+        middle_age_percent = self.middle_age_entry.get()
+        senior_percent = self.senior_entry.get()
+
+        # Перевірка, чи сума % чоловіків і жінок дорівнює 100
+        try:
+            male_percent = float(male_percent)
+            female_percent = float(female_percent)
+            if male_percent + female_percent != 100:
+                raise ValueError("Сума % чоловіків і жінок має бути 100.")
+        except ValueError as e:
+            messagebox.showerror("Помилка", f"Невірні дані для % чоловіків/жінок: {str(e)}")
+            return False
+
+        # Перевірка, чи сума % вікових груп дорівнює 100
+        try:
+            children_percent = float(children_percent)
+            young_adults_percent = float(young_adults_percent)
+            middle_age_percent = float(middle_age_percent)
+            senior_percent = float(senior_percent)
+            if children_percent + young_adults_percent + middle_age_percent + senior_percent != 100:
+                raise ValueError("Сума % вікових груп має бути 100.")
+        except ValueError as e:
+            messagebox.showerror("Помилка", f"Невірні дані для % вікових груп: {str(e)}")
+            return False
+
+        # Перевірка коефіцієнтів зараження та одужання
+        try:
+            beta = float(self.beta_entry.get())
+            gamma = float(self.gamma_entry.get())
+            if not (0 <= beta <= 1):
+                raise ValueError("Коеф. зараження (β) має бути в межах від 0 до 1.")
+            if not (0 <= gamma <= 1):
+                raise ValueError("Коеф. одужання (γ) має бути в межах від 0 до 1.")
+        except ValueError as e:
+            messagebox.showerror("Помилка", f"Невірні дані для коефіцієнтів: {str(e)}")
+            return False
+
+        # Перевірка летальності для кожної вікової групи
+        try:
+            death_rate_children = float(self.death_rate_children_entry.get())
+            death_rate_young_adults = float(self.death_rate_young_adults_entry.get())
+            death_rate_middle_age = float(self.death_rate_middle_age_entry.get())
+            death_rate_senior = float(self.death_rate_senior_entry.get())
+            if any(rate > 100 for rate in [death_rate_children, death_rate_young_adults, death_rate_middle_age, death_rate_senior]):
+                raise ValueError("Летальність не повинна перевищувати 100%.")
+        except ValueError as e:
+            messagebox.showerror("Помилка", f"Невірні дані для летальності: {str(e)}")
+            return False
+
+        # Перевірка смертності для чоловіків та жінок
+        try:
+            male_mortality = float(self.male_mortality_entry.get())
+            female_mortality = float(self.female_mortality_entry.get())
+            if male_mortality + female_mortality != 100:
+                raise ValueError("Сума смертності чоловіків і жінок має бути 100%.")
+        except ValueError as e:
+            messagebox.showerror("Помилка", f"Невірні дані для смертності: {str(e)}")
+            return False
+
+        # Перевірка для вакцинації та карантину
+        try:
+            vaccine_percent = float(self.vaccine_percent_entry.get())
+            quarantine_percent = float(self.quarantine_percent_entry.get())
+            if any(percent > 100 for percent in [vaccine_percent, quarantine_percent]):
+                raise ValueError("Вакцинація та карантин не повинні перевищувати 100%.")
+        except ValueError as e:
+            messagebox.showerror("Помилка", f"Невірні дані для вакцинації/карантину: {str(e)}")
+            return False
+
+        # Перевірка для зменшення інфікування та смертності
+        try:
+            vaccine_infection_reduction = float(self.vaccine_infection_reduction_entry.get())
+            vaccine_mortality_reduction = float(self.vaccine_mortality_reduction_entry.get())
+            quarantine_infection_reduction = float(self.quarantine_infection_reduction_entry.get())
+            quarantine_mortality_reduction = float(self.quarantine_mortality_reduction_entry.get())
+            if any(percent > 100 for percent in [vaccine_infection_reduction, vaccine_mortality_reduction, 
+                                                  quarantine_infection_reduction, quarantine_mortality_reduction]):
+                raise ValueError("Зменшення інфікування та смертності не повинно перевищувати 100%.")
+        except ValueError as e:
+            messagebox.showerror("Помилка", f"Невірні дані для зменшення інфікування/смертності: {str(e)}")
+            return False
+
+        return True
+
+    def validate_parameters_for_calculate(self):
+        # Отримуємо значення з полів введення
+        total_population = int(self.population_entry.get())
+        male_population = int(self.male_population_entry.get())
+        female_population = int(self.female_population_entry.get())
+
+        children_population = int(self.children_population_entry.get())
+        youth_population = int(self.youth_population_entry.get())
+        middle_population = int(self.middle_population_entry.get())
+        senior_population = int(self.senior_population_entry.get())
+
+        infected_male = int(self.infected_male_entry.get())
+        infected_female = int(self.infected_female_entry.get())
+
+        infected_children = int(self.infected_children_entry.get())
+        infected_youth = int(self.infected_youth_entry.get())
+        infected_middle = int(self.infected_middle_entry.get())
+        infected_senior = int(self.infected_senior_entry.get())
+
+        male_death = int(self.male_death_entry.get())
+        female_death = int(self.female_death_entry.get())
+
+        death_children = int(self.death_children_entry.get())
+        death_youth = int(self.death_youth_entry.get())
+        death_middle = int(self.death_middle_entry.get())
+        death_senior = int(self.death_senior_entry.get())
+
+        # Перевірки
+
+        # Перевірка на правильність розподілу за статтю
+        if male_population + female_population != total_population:
+            messagebox.showerror("Помилка", "Кількість чоловіків та жінок має дорівнювати загальній кількості людей.")
+            return False
+
+        # Перевірка на правильність розподілу за віковими групами
+        if (children_population + youth_population + middle_population + senior_population) != total_population:
+            messagebox.showerror("Помилка", "Сума кількості людей у вікових групах має дорівнювати загальній кількості людей.")
+            return False
+
+        # Перевірка на захворілих
+        if infected_male + infected_female > total_population:
+            messagebox.showerror("Помилка", "Кількість захворілих не може перевищувати загальну кількість людей.")
+            return False
+
+        # Перевірка на захворілих за віковими групами
+        if infected_children + infected_youth + infected_middle + infected_senior > infected_male + infected_female:
+            messagebox.showerror("Помилка", "Загальна кількість захворілих не може перевищувати загальну кількість людей.")
+            return False
+
+        # Перевірка на кількість померлих
+        if male_death > male_population or female_death > female_population:
+            messagebox.showerror("Помилка", "Кількість померлих чоловіків чи жінок не може перевищувати кількість чоловіків чи жінок.")
+            return False
+
+        # Перевірка на померлих за віковими групами
+        if death_children > children_population or death_youth > youth_population or death_middle > middle_population or death_senior > senior_population:
+            messagebox.showerror("Помилка", "Кількість померлих у вікових групах не може перевищувати кількість людей у цих групах.")
+            return False
+
+        # Перевірка на співвідношення захворілих і померлих
+        if death_children > infected_children or death_youth > infected_youth or death_middle > infected_middle or death_senior > infected_senior:
+            messagebox.showerror("Помилка", "Кількість померлих не може перевищувати кількість захворілих в кожній віковій групі.")
+            return False
+
+        return True
+
+    def validate_factors(self):
+        try:
+            # Перевірка кількості контактів на день
+            contacts = float(self.entry_contacts.get())
+            if contacts < 0:
+                messagebox.showerror("Помилка", "Кількість контактів на день не може бути менше 0.")
+                return False
+    
+            # Перевірка ймовірності зараження при контакті
+            infection_prob = float(self.entry_infection_prob.get())
+            if infection_prob < 0 or infection_prob > 1:
+                messagebox.showerror("Помилка", "Ймовірність зараження при контакті повинна бути в межах 0–1.")
+                return False
+    
+            # Перевірка середньої тривалості хвороби
+            disease_duration = float(self.entry_disease_duration.get())
+            if disease_duration < 0:
+                messagebox.showerror("Помилка", "Середня тривалість хвороби не може бути менше 0.")
+                return False
+    
+            return True  # Якщо всі перевірки пройдені, повертаємо True
+    
+        except ValueError:
+            messagebox.showerror("Помилка", "Всі значення повинні бути числовими.")
+            return False
 
 if __name__ == "__main__":
     app = SimulationApp()

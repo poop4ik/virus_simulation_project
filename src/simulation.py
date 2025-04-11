@@ -162,6 +162,12 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
         male_total = int(np.round(population.total_population * (population.male_percent / 100)))
         female_total = population.total_population - male_total
 
+        durations = population.average_infection_duration(
+        gamma,
+        vaccine_percent, vaccine_mortality_reduction,
+        quarantine_percent, quarantine_mortality_reduction
+        )
+
         # Створюємо папку temp, якщо вона не існує
         os.makedirs("temp", exist_ok=True)
         with open(os.path.join("temp", "simulation_results.txt"), "w", encoding="utf-8") as file:
@@ -194,6 +200,9 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
             file.write(f"    Загальна кількість: {senior_dead}\n")
             file.write(f"    Померло чоловіків: {senior_male_dead}\n")
             file.write(f"    Померло жінок: {senior_female_dead}\n")
+            file.write("\nСередня тривалість інфекції:\n")
+            for group, T in durations.items():
+                file.write(f"  {group}: {T:.0f} дн. \n")
             vaccinated = int(np.round(population.total_population * vaccine_percent / 100))
             quarantined = int(np.round(population.total_population * quarantine_percent / 100))
             file.write(f"\nВакциновано: {vaccinated} осіб ({round(vaccine_percent, 2)}%)\n")
@@ -223,6 +232,7 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
                 quarantine_inf_reduction_effect,
                 quarantine_mort_reduction_effect
             ),
+            'infection_durations': durations,
             'peak': (max_infected_value, max_infected_day_value)
         }
     else:

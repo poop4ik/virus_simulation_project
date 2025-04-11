@@ -136,3 +136,25 @@ class Population:
 
         return (vaccine_inf_reduction_effect, vaccine_mort_reduction_effect,
                 quarantine_inf_reduction_effect, quarantine_mort_reduction_effect)
+    
+    def average_infection_duration(self, gamma,
+                                   vaccine_percent, vaccine_mortality_reduction,
+                                   quarantine_percent, quarantine_mortality_reduction):
+        """
+        Повертає словник {group_name: T_inf}, де T_inf — середня добова тривалість інфекції (дні).
+        """
+        v_cov = vaccine_percent / 100
+        q_cov = quarantine_percent / 100
+        v_mort_eff = vaccine_mortality_reduction / 100
+        q_mort_eff = quarantine_mortality_reduction / 100
+
+        reduction_mort = v_mort_eff * v_cov + q_mort_eff * q_cov
+
+        durations = {}
+        for group, data in self.groups.items():
+            μ = data["mortality_rate"] * (1 - reduction_mort) / 100  # добова смертність
+            removal_rate = gamma + μ
+            # щоб уникнути ділення на нуль
+            T = (1 / removal_rate) if removal_rate > 0 else float('inf')
+            durations[group] = int(round(T))
+        return durations
