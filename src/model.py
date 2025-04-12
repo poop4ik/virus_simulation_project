@@ -1,4 +1,6 @@
+#model.py
 import numpy as np
+import random
 
 class Population:
     def __init__(self, total_population, children_percentage, young_adults_percentage, 
@@ -8,14 +10,10 @@ class Population:
         self.total_population = total_population
         self.male_percent = male_percent
         self.female_percent = female_percent
-        # Нові параметри смертності за статтю
         self.male_mort_rate = male_mortality
         self.female_mort_rate = female_mortality
-
-        # Акумулятор для загальної кількості інфікованих
         self.cumulative_infected = 0
 
-        # Дані для кожної вікової групи
         self.groups = {
             "Children": {
                 "percentage": children_percentage,
@@ -54,12 +52,14 @@ class Population:
                 "dead": 0
             }
         }
-        # Початкове зараження: по одному зараженому в кожній групі
-        for group in self.groups:
-            if self.groups[group]["susceptible"] > 0:
-                self.groups[group]["infected"] = 1
-                self.groups[group]["susceptible"] -= 1
-                self.cumulative_infected += 1
+        
+        eligible_groups = [group for group in self.groups if self.groups[group]["susceptible"] > 0]
+
+        if eligible_groups:
+            chosen_group = random.choice(eligible_groups)
+            self.groups[chosen_group]["infected"] = 1
+            self.groups[chosen_group]["susceptible"] -= 1
+            self.cumulative_infected += 1
 
     def simulate_day(self, beta, gamma, vaccine_percent, vaccine_infection_reduction, vaccine_mortality_reduction,
                      quarantine_percent, quarantine_infection_reduction, quarantine_mortality_reduction):
@@ -75,9 +75,7 @@ class Population:
         reduction_inf = v_inf_eff * v_cov + q_inf_eff * q_cov
         effective_beta = beta * max(1 - reduction_inf, 0)
 
-        # --- НОВА ЧАСТИНА: рахуємо загальну кількість інфікованих у всіх групах ---
         total_infected = sum(data["infected"] for data in self.groups.values())
-        # ------------------------------------------------------------------------
 
         for group, data in self.groups.items():
             s = data["susceptible"]
@@ -90,7 +88,6 @@ class Population:
             reduction_mort = v_mort_eff * v_cov + q_mort_eff * q_cov
             effective_mort_rate = mortality_rate * max(1 - reduction_mort, 0)
 
-            # Замість i/total беремо total_infected/self.total_population
             new_infected = effective_beta * s * total_infected / self.total_population if self.total_population > 0 else 0
 
             new_recovered = gamma * i
@@ -117,7 +114,6 @@ class Population:
 
         return local_results
 
-
     def calculate_effectiveness(self, vaccine_percent, quarantine_percent,
                                 vaccine_infection_reduction, vaccine_mortality_reduction,
                                 quarantine_infection_reduction, quarantine_mortality_reduction):
@@ -140,9 +136,6 @@ class Population:
     def average_infection_duration(self, gamma,
                                    vaccine_percent, vaccine_mortality_reduction,
                                    quarantine_percent, quarantine_mortality_reduction):
-        """
-        Повертає словник {group_name: T_inf}, де T_inf — середня добова тривалість інфекції (дні).
-        """
         v_cov = vaccine_percent / 100
         q_cov = quarantine_percent / 100
         v_mort_eff = vaccine_mortality_reduction / 100
@@ -152,9 +145,8 @@ class Population:
 
         durations = {}
         for group, data in self.groups.items():
-            μ = data["mortality_rate"] * (1 - reduction_mort) / 100  # добова смертність
+            μ = data["mortality_rate"] * (1 - reduction_mort) / 100 
             removal_rate = gamma + μ
-            # щоб уникнути ділення на нуль
             T = (1 / removal_rate) if removal_rate > 0 else float('inf')
             durations[group] = int(round(T))
         return durations

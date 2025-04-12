@@ -91,27 +91,21 @@ class SimulationApp:
         btn4.grid(row=4, column=0, sticky="we", pady=10)
 
     def show_simulation_settings(self):
-        # Очищаємо вікно
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        # Змінюємо розмір і центруємо
         self.root.geometry("800x700")
         self.center_window(self.root, 800, 700)
 
-        # Фрейм для всього
         outer_frame = tk.Frame(self.root, bg="#f4f4f4")
         outer_frame.pack(fill="both", expand=True, padx=10, pady=20)
 
-        # Фрейм для полів
         settings_frame = tk.Frame(outer_frame, bg="#f4f4f4")
         settings_frame.pack(fill="both", expand=True)
 
-        # Налаштування колонок
         for col in range(3):
             settings_frame.grid_columnconfigure(col, weight=1, uniform="col")
 
-        # Поля
         fields = [
             ("Назва експерименту",                "experiment_name_entry",                  "Test_Infection_X"),
             ("Популяція",                         "population_entry",                       "1000"),
@@ -142,7 +136,6 @@ class SimulationApp:
             col = idx % 3
             row = (idx // 3) * 2
 
-            # Динамічний padx для рівного відступу між колонками
             if col == 0:
                 padx = (10, 5)
             elif col == 1:
@@ -159,7 +152,6 @@ class SimulationApp:
 
             setattr(self, attr, entry)
 
-        # Кнопки — всередині того ж outer_frame
         buttons_frame = tk.Frame(outer_frame, bg="#f4f4f4")
         buttons_frame.pack(fill="x", pady=10)
 
@@ -173,8 +165,6 @@ class SimulationApp:
         btn_run .grid(row=0, column=0, padx=(10, 5), pady=5, sticky="we")
         btn_view.grid(row=0, column=1, padx=(10, 10), pady=5, sticky="we")
         btn_back.grid(row=0, column=2, padx=(5, 10), pady=5, sticky="we")
-
-
 
     def run_simulation(self):
         if not self.validate_parameters():
@@ -258,7 +248,6 @@ class SimulationApp:
         plot_age_gender_mortality(data['age_gender_deaths'])
         plot_infection_durations(data['infection_durations'])
 
-
     def save_parameters_to_txt(self):
         parameters_txt_path = os.path.join(RESULTS_DIR, "simulation_parameters.txt")
 
@@ -293,62 +282,49 @@ class SimulationApp:
         messagebox.showinfo("Збережено", f"Результати збережено в data/")
 
     def show_calculate_parameters_settings(self):
-        # Очищаємо вікно від попередніх віджетів
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        # Встановлюємо розмір вікна та центруємо його
         self.root.geometry("800x700")
         self.center_window(self.root, 800, 700)
 
-        # Основний фрейм
         outer_frame = tk.Frame(self.root, bg="#f4f4f4")
         outer_frame.pack(fill="both", expand=True, padx=10, pady=20)
 
-        # Фрейм для полів введення
         settings_frame = tk.Frame(outer_frame, bg="#f4f4f4")
         settings_frame.pack(fill="both", expand=True)
 
-        # Налаштовуємо сітку (3 колонки)
         for col in range(3):
             settings_frame.grid_columnconfigure(col, weight=1, uniform="col")
 
-        # Поля введення: (текст, назва атрибуту, значення за замовчуванням)
         fields = [
             ("Кількість людей",                      "population_entry",             "1000"),
             
             ("Кількість чоловіків",                  "male_population_entry",        "700"),
             ("Кількість жінок",                      "female_population_entry",      "300"),
 
-            # Розподіл по вікових групах (у сумі = популяція)
             ("Кількість дітей (0–14 років)",         "children_population_entry",    "250"),
             ("Кількість молодь (15–34 років)",       "youth_population_entry",       "250"),
             ("Кількість середній вік (35–64)",       "middle_population_entry",      "250"),
             ("Кількість похилі (65+)",               "senior_population_entry",      "250"),
-    
-            # Захворюваність за статтю           
+           
             ("Захворіло чоловіків",                  "infected_male_entry",          "350"),
             ("Захворіло жінок",                      "infected_female_entry",        "150"),
 
-            # Захворюваність за віковими групами
             ("Захворіло дітей (0–14)",               "infected_children_entry",      "100"),
             ("Захворіло молодь (15–34)",             "infected_youth_entry",         "150"),
             ("Захворіло середній вік (35–64)",       "infected_middle_entry",        "150"),
             ("Захворіло похилі (65+)",               "infected_senior_entry",        "100"),
 
-            # Смертність за статтю
             ("Померло чоловіків",                 "male_death_entry",             "30"),
             ("Померло жінок",                     "female_death_entry",           "20"),
 
-            # Смертність за віковими групами
             ("Померло дітей (0–14)",              "death_children_entry",         "15"),
             ("Померло молодь (15–34)",            "death_youth_entry",            "10"),
             ("Померло середній вік (35–64)",      "death_middle_entry",           "10"),
             ("Померло похилі (65+)",              "death_senior_entry",           "15"),
         ]
 
-
-        # Розміщення полів у сітці
         for idx, (text, attr, default) in enumerate(fields):
             col = idx % 3
             row = (idx // 3) * 2
@@ -365,7 +341,6 @@ class SimulationApp:
             entry.grid(row=row+1, column=col, padx=padx, pady=(0, 10), sticky="we")
             setattr(self, attr, entry)
 
-        # Кнопки в нижній частині вікна
         buttons_frame = tk.Frame(outer_frame, bg="#f4f4f4")
         buttons_frame.pack(fill="x", pady=10)
         for col in range(3):
@@ -390,7 +365,6 @@ class SimulationApp:
                 messagebox.showerror("Помилка", f"Файл не знайдений: {source_file}")
         except Exception as e:
             messagebox.showerror("Помилка", f"Не вдалося зберегти файл: {e}")
-
 
     def calculate_parameters(self):
         if not self.validate_parameters_for_calculate():
@@ -438,7 +412,6 @@ class SimulationApp:
             male_mortality = round((death_male / total_deaths) * 100, 2) if total_deaths > 0 else 0
             female_mortality = round((death_female / total_deaths) * 100, 2) if total_deaths > 0 else 0
 
-            # Збереження у файл temp/calculate_parameters.txt
             output_file = "temp/calculate_parameters.txt"
             with open(output_file, "w", encoding="utf-8") as f:
                 f.write(f"Популяція: {population}\n")
@@ -460,7 +433,6 @@ class SimulationApp:
         except Exception as e:
             messagebox.showerror("Помилка", f"Помилка при обчисленні параметрів:\n{e}")
 
-    
     def show_calculate_factors_settings(self):
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -507,7 +479,6 @@ class SimulationApp:
         btn_save.grid(row=0, column=1, padx=(5, 5), pady=5, sticky="we")
         btn_back.grid(row=0, column=2, padx=(5, 10), pady=5, sticky="we")
 
-
     def save_calculation_factors(self):
         source_file = os.path.join("temp", "calculate_factors.txt")
         destination_file = os.path.join("data", "calculate_factors.txt")
@@ -521,8 +492,6 @@ class SimulationApp:
                 messagebox.showerror("Помилка", f"Файл не знайдений: {source_file}")
         except Exception as e:
             messagebox.showerror("Помилка", f"Не вдалося зберегти файл: {e}")
-
-
 
     def calculate_factors(self):
         if not self.validate_factors():
@@ -547,7 +516,6 @@ class SimulationApp:
             messagebox.showerror("Помилка", f"Помилка при обчисленні коефіцієнтів:\n{e}")
 
     def load_parameters(self):
-        # Відкриваємо діалогове вікно для вибору файлу
         file_path = filedialog.askopenfilename(
             title="Виберіть файл з параметрами",
             filetypes=[("Text files", "*.txt")]
@@ -558,19 +526,17 @@ class SimulationApp:
                 with open(file_path, "r", encoding="utf-8") as f:
                     lines = f.readlines()
 
-                # Використовуємо регулярні вирази для отримання лише чисел
                 def extract_number(line):
-                    match = re.search(r"\d+(\.\d+)?", line)  # шукаємо ціле або дробове число
+                    match = re.search(r"\d+(\.\d+)?", line)
                     return match.group(0) if match else None
 
-                # Завантажуємо параметри з файлу
                 self.show_simulation_settings()
 
                 self.experiment_name_entry.delete(0, tk.END)
                 self.experiment_name_entry.insert(0, lines[0].strip())
 
                 self.population_entry.delete(0, tk.END)
-                self.population_entry.insert(0, extract_number(lines[1]))  # отримуємо лише число
+                self.population_entry.insert(0, extract_number(lines[1])) 
 
                 self.male_entry.delete(0, tk.END)
                 self.male_entry.insert(0, extract_number(lines[2]))
@@ -640,7 +606,6 @@ class SimulationApp:
                 messagebox.showerror("Помилка", "Файл з параметрами не знайдено або він не коректний!")
 
     def validate_parameters(self):
-        # Отримуємо значення з полів вводу
         male_percent = self.male_entry.get()
         female_percent = self.female_entry.get()
         children_percent = self.children_entry.get()
@@ -648,7 +613,6 @@ class SimulationApp:
         middle_age_percent = self.middle_age_entry.get()
         senior_percent = self.senior_entry.get()
 
-        # Перевірка, чи сума % чоловіків і жінок дорівнює 100
         try:
             male_percent = float(male_percent)
             female_percent = float(female_percent)
@@ -658,7 +622,6 @@ class SimulationApp:
             messagebox.showerror("Помилка", f"Невірні дані для % чоловіків/жінок: {str(e)}")
             return False
 
-        # Перевірка, чи сума % вікових груп дорівнює 100
         try:
             children_percent = float(children_percent)
             young_adults_percent = float(young_adults_percent)
@@ -670,7 +633,6 @@ class SimulationApp:
             messagebox.showerror("Помилка", f"Невірні дані для % вікових груп: {str(e)}")
             return False
 
-        # Перевірка коефіцієнтів зараження та одужання
         try:
             beta = float(self.beta_entry.get())
             gamma = float(self.gamma_entry.get())
@@ -682,7 +644,6 @@ class SimulationApp:
             messagebox.showerror("Помилка", f"Невірні дані для коефіцієнтів: {str(e)}")
             return False
 
-        # Перевірка летальності для кожної вікової групи
         try:
             death_rate_children = float(self.death_rate_children_entry.get())
             death_rate_young_adults = float(self.death_rate_young_adults_entry.get())
@@ -694,7 +655,6 @@ class SimulationApp:
             messagebox.showerror("Помилка", f"Невірні дані для летальності: {str(e)}")
             return False
 
-        # Перевірка смертності для чоловіків та жінок
         try:
             male_mortality = float(self.male_mortality_entry.get())
             female_mortality = float(self.female_mortality_entry.get())
@@ -704,7 +664,6 @@ class SimulationApp:
             messagebox.showerror("Помилка", f"Невірні дані для смертності: {str(e)}")
             return False
 
-        # Перевірка для вакцинації та карантину
         try:
             vaccine_percent = float(self.vaccine_percent_entry.get())
             quarantine_percent = float(self.quarantine_percent_entry.get())
@@ -714,7 +673,6 @@ class SimulationApp:
             messagebox.showerror("Помилка", f"Невірні дані для вакцинації/карантину: {str(e)}")
             return False
 
-        # Перевірка для зменшення інфікування та смертності
         try:
             vaccine_infection_reduction = float(self.vaccine_infection_reduction_entry.get())
             vaccine_mortality_reduction = float(self.vaccine_mortality_reduction_entry.get())
@@ -730,7 +688,6 @@ class SimulationApp:
         return True
 
     def validate_parameters_for_calculate(self):
-        # Отримуємо значення з полів введення
         total_population = int(self.population_entry.get())
         male_population = int(self.male_population_entry.get())
         female_population = int(self.female_population_entry.get())
@@ -756,39 +713,30 @@ class SimulationApp:
         death_middle = int(self.death_middle_entry.get())
         death_senior = int(self.death_senior_entry.get())
 
-        # Перевірки
-
-        # Перевірка на правильність розподілу за статтю
         if male_population + female_population != total_population:
             messagebox.showerror("Помилка", "Кількість чоловіків та жінок має дорівнювати загальній кількості людей.")
             return False
 
-        # Перевірка на правильність розподілу за віковими групами
         if (children_population + youth_population + middle_population + senior_population) != total_population:
             messagebox.showerror("Помилка", "Сума кількості людей у вікових групах має дорівнювати загальній кількості людей.")
             return False
 
-        # Перевірка на захворілих
         if infected_male + infected_female > total_population:
             messagebox.showerror("Помилка", "Кількість захворілих не може перевищувати загальну кількість людей.")
             return False
 
-        # Перевірка на захворілих за віковими групами
         if infected_children + infected_youth + infected_middle + infected_senior > infected_male + infected_female:
             messagebox.showerror("Помилка", "Загальна кількість захворілих не може перевищувати загальну кількість людей.")
             return False
 
-        # Перевірка на кількість померлих
         if male_death > male_population or female_death > female_population:
             messagebox.showerror("Помилка", "Кількість померлих чоловіків чи жінок не може перевищувати кількість чоловіків чи жінок.")
             return False
 
-        # Перевірка на померлих за віковими групами
         if death_children > children_population or death_youth > youth_population or death_middle > middle_population or death_senior > senior_population:
             messagebox.showerror("Помилка", "Кількість померлих у вікових групах не може перевищувати кількість людей у цих групах.")
             return False
 
-        # Перевірка на співвідношення захворілих і померлих
         if death_children > infected_children or death_youth > infected_youth or death_middle > infected_middle or death_senior > infected_senior:
             messagebox.showerror("Помилка", "Кількість померлих не може перевищувати кількість захворілих в кожній віковій групі.")
             return False
@@ -797,25 +745,22 @@ class SimulationApp:
 
     def validate_factors(self):
         try:
-            # Перевірка кількості контактів на день
             contacts = float(self.entry_contacts.get())
             if contacts < 0:
                 messagebox.showerror("Помилка", "Кількість контактів на день не може бути менше 0.")
                 return False
     
-            # Перевірка ймовірності зараження при контакті
             infection_prob = float(self.entry_infection_prob.get())
             if infection_prob < 0 or infection_prob > 1:
                 messagebox.showerror("Помилка", "Ймовірність зараження при контакті повинна бути в межах 0–1.")
                 return False
     
-            # Перевірка середньої тривалості хвороби
             disease_duration = float(self.entry_disease_duration.get())
             if disease_duration < 0:
                 messagebox.showerror("Помилка", "Середня тривалість хвороби не може бути менше 0.")
                 return False
     
-            return True  # Якщо всі перевірки пройдені, повертаємо True
+            return True
     
         except ValueError:
             messagebox.showerror("Помилка", "Всі значення повинні бути числовими.")

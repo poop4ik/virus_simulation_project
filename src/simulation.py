@@ -1,3 +1,4 @@
+#simulation.py
 from mpi4py import MPI 
 import numpy as np
 from model import Population
@@ -17,22 +18,17 @@ def compute_group_gender_deaths(group_dead, population):
     total_weight = male_weight + female_weight
 
     if total_weight == 0:
-        # Немає смертності у жодної статі
         return 0, 0
 
     if male_weight == 0:
-        # Вся смертність у жінок
         return 0, int(group_dead)
 
     if female_weight == 0:
-        # Вся смертність у чоловіків
         return int(group_dead), 0
 
-    # Стандартний випадок
     group_male_dead = int(np.round(group_dead * (male_weight / total_weight)))
     group_female_dead = group_dead - group_male_dead
     return group_male_dead, group_female_dead
-
 
 def parallel_simulation(population, beta, gamma, days, num_processes,
                         vaccine_percent, vaccine_infection_reduction, vaccine_mortality_reduction,
@@ -41,21 +37,18 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
     rank = comm.Get_rank()
     size = comm.Get_size()
 
-    # Розподіл днів для кожного процесу
     chunk_size = days // size
     start_day = rank * chunk_size
     end_day = (rank + 1) * chunk_size if rank != size - 1 else days
 
-    # Основні результати симуляції із кумулятивним значенням
     local_results = {
         'susceptible': np.zeros(days),
         'infected': np.zeros(days),
         'recovered': np.zeros(days),
         'dead': np.zeros(days),
-        'cumulative_infected': np.zeros(days)  # для збереження кумулятивних даних
+        'cumulative_infected': np.zeros(days)
     }
 
-    # Результати смертності по віковим групам
     local_age_deaths = {
         'Children': np.zeros(days),
         'Young Adults': np.zeros(days),
@@ -80,7 +73,6 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
             local_results['dead'][day] += data['dead']
             local_age_deaths[group][day] = data['dead']
 
-        # Записуємо кумулятивну кількість інфікованих до поточного дня
         local_results['cumulative_infected'][day] = population.cumulative_infected
 
         if local_results['infected'][day] > max_infected:
@@ -119,7 +111,6 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
         final_infected_last = int(np.round(final_infected[-1]))
         final_recovered_last = int(np.round(final_recovered[-1]))
         
-        # Отримуємо загальну кількість померлих по вікових групах
         children_dead = int(np.round(population.groups['Children']['dead']))
         young_adults_dead = int(np.round(population.groups['Young Adults']['dead']))
         middle_aged_dead = int(np.round(population.groups['Middle Aged']['dead']))
@@ -129,16 +120,14 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
 
         max_infected_value, max_infected_day_value = max_infected_data[0]
 
-        # Розподіл смертності за статтю (загальний рівень)
         male_dead_total = 0
         female_dead_total = 0
-        # А також для кожної групи обчислюємо розподіл:
+
         children_male_dead, children_female_dead = compute_group_gender_deaths(children_dead, population)
         young_adults_male_dead, young_adults_female_dead = compute_group_gender_deaths(young_adults_dead, population)
         middle_aged_male_dead, middle_aged_female_dead = compute_group_gender_deaths(middle_aged_dead, population)
         senior_male_dead, senior_female_dead = compute_group_gender_deaths(senior_dead, population)
 
-        # Додайте це:
         age_gender_deaths = {
             'Children': (children_male_dead, children_female_dead),
             'Young Adults': (young_adults_male_dead, young_adults_female_dead),
@@ -146,8 +135,6 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
             'Senior': (senior_male_dead, senior_female_dead)
         }
 
-
-        # Загальний розподіл (сума по групах)
         male_dead_total = children_male_dead + young_adults_male_dead + middle_aged_male_dead + senior_male_dead
         female_dead_total = children_female_dead + young_adults_female_dead + middle_aged_female_dead + senior_female_dead
 
@@ -158,7 +145,6 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
             quarantine_infection_reduction, quarantine_mortality_reduction
         )
 
-        # Обчислення загальної кількості чоловіків та жінок у популяції
         male_total = int(np.round(population.total_population * (population.male_percent / 100)))
         female_total = population.total_population - male_total
 
@@ -168,7 +154,6 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
         quarantine_percent, quarantine_mortality_reduction
         )
 
-        # Створюємо папку temp, якщо вона не існує
         os.makedirs("temp", exist_ok=True)
         with open(os.path.join("temp", "simulation_results.txt"), "w", encoding="utf-8") as file:
             file.write(f"Загальна кількість населення: {population.total_population}\n")
@@ -214,8 +199,6 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
             file.write(f"  - Завдяки вакцинації: {vaccine_mort_reduction_effect}%\n")
             file.write(f"  - Завдяки карантину: {quarantine_mort_reduction_effect}%\n")
 
-
-        # Повертаємо всі необхідні дані в одному словнику
         return {
             'susceptible': final_susceptible,
             'infected': final_infected,

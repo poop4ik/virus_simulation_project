@@ -1,3 +1,4 @@
+#save_results.py
 import os
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -10,7 +11,6 @@ TEMP_DIR = "temp"
 FONTS_DIR = "fonts"
 FONT_NAME = "Royal_Arial"
 
-# Реєструємо шрифт
 pdfmetrics.registerFont(TTFont(FONT_NAME, os.path.join(FONTS_DIR, "Royal_Arial.ttf")))
 
 def _extract_section(lines, start_pattern, stop_on_blank=True, include_start=True):
@@ -32,10 +32,8 @@ def _extract_age_mortality(lines):
     section = []
     collecting = False
     for line in lines:
-        # Якщо знаходиться рядок з віковою групою
         if "Children:" in line or "Young Adults:" in line or "Middle Aged:" in line or "Senior:" in line:
             group_name = line.strip().split(":")[0]
-            # Шукаємо загальну кількість
             for next_line in lines[lines.index(line) + 1:]:
                 if "Загальна кількість" in next_line:
                     total_deaths = next_line.strip()
@@ -53,7 +51,6 @@ def save_results_to_pdf():
     else:
         lines = []
 
-    # --- PDF з текстовим звітом ---
     text_pdf_path = os.path.join(RESULTS_DIR, "text_report.pdf")
     c_text = canvas.Canvas(text_pdf_path, pagesize=letter)
     width, height = letter
@@ -74,7 +71,6 @@ def save_results_to_pdf():
         c_text.drawString(40, height - 40, "simulation_results.txt не знайдено.")
     c_text.save()
 
-    # --- PDF з графіками ---
     graphs_pdf_path = os.path.join(RESULTS_DIR, "charts_report.pdf")
     c_graphs = canvas.Canvas(graphs_pdf_path, pagesize=letter)
 
@@ -94,7 +90,7 @@ def save_results_to_pdf():
         },
         "age_mortality.png": {
             "title": "Динаміка смертності за віковими групами",
-            "section": _extract_age_mortality(lines)  # Використовуємо нову функцію
+            "section": _extract_age_mortality(lines)
         },
         "age_gender_mortality.png": {
             "title": "Смертність за віковими групами і статтю",
@@ -130,31 +126,24 @@ def save_results_to_pdf():
         if not os.path.exists(img_path):
             continue
 
-        # Центрування заголовка
         c_graphs.setFont(FONT_NAME, 14)
         title_width = c_graphs.stringWidth(spec["title"], FONT_NAME, 14)
         c_graphs.drawString((width - title_width) / 2, height - 40, spec["title"])
 
-        # Зображення
         img = ImageReader(img_path)
-        img_w, img_h = img.getSize()  # Отримуємо розміри зображення
+        img_w, img_h = img.getSize()
 
-        # Масштабуємо зображення, щоб воно помістилось на сторінці
-        max_w = width - 80  # максимальна ширина з урахуванням відступів
-        scale = max_w / img_w  # масштаб за шириною
-        disp_w = img_w * scale  # нова ширина
-        disp_h = img_h * scale  # нова висота
+        max_w = width - 80 
+        scale = max_w / img_w 
+        disp_w = img_w * scale
+        disp_h = img_h * scale
 
-        # Вираховуємо координати для центрування зображення по осі Y
         img_y = height - 80 - disp_h
 
-        # Центруємо зображення по горизонталі
         img_x = (width - disp_w) / 2
 
-        # Малюємо зображення
         c_graphs.drawImage(img, img_x, img_y, width=disp_w, height=disp_h)
 
-        # Текст під графіком
         if spec["section"]:
             text = c_graphs.beginText(40, img_y - 20)
             text.setFont(FONT_NAME, 10)

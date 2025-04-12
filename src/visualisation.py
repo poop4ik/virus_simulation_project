@@ -1,8 +1,8 @@
+#visualisation.py
 import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-# Переконуємось, що папка temp існує
 os.makedirs("temp", exist_ok=True)
 
 def _save_and_close(fig_name):
