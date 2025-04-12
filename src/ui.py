@@ -4,6 +4,7 @@ from tkinter import filedialog, messagebox, Toplevel, Label, Button
 import re
 import os
 from simulation import parallel_simulation
+from simulation import serial_simulation
 from visualisation import plot_results
 from save_results import save_results_to_pdf
 import numpy as np
@@ -210,12 +211,21 @@ class SimulationApp:
             male_percent, female_percent, male_mortality, female_mortality
         )
     
+        # Запуск паралельної симуляції з MPI
+        num_processes = 8
         data = parallel_simulation(
-            population, beta, gamma, days, 4,
+            population, beta, gamma, days, num_processes,
             vaccine_percent, vaccine_infection_reduction, vaccine_mortality_reduction,
             quarantine_percent, quarantine_infection_reduction, quarantine_mortality_reduction
         )
-    
+
+        ### Запуск серійної симуляції
+        #serial_data = serial_simulation(
+        #    population, beta, gamma, days, vaccine_percent, vaccine_infection_reduction,
+        #    vaccine_mortality_reduction, quarantine_percent, quarantine_infection_reduction, quarantine_mortality_reduction
+        #)
+
+
         messagebox.showinfo(
             "Симуляція завершена",
             f"Експеримент: {experiment_name}\nСимуляцію завершено. Перегляньте результати"

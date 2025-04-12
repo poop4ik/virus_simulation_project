@@ -3,16 +3,9 @@ from mpi4py import MPI
 import numpy as np
 from model import Population
 import os
+import time
 
 def compute_group_gender_deaths(group_dead, population):
-    """
-    Обчислює кількість смертних за статтю для даної групи.
-    Формула:
-      male_weight = (male_percent / 100) * male_mort_rate
-      female_weight = (female_percent / 100) * female_mort_rate
-      group_male_dead = round(group_dead * (male_weight / (male_weight + female_weight)))
-      group_female_dead = group_dead - group_male_dead
-    """
     male_weight = (population.male_percent / 100) * population.male_mort_rate
     female_weight = (population.female_percent / 100) * population.female_mort_rate
     total_weight = male_weight + female_weight
@@ -36,6 +29,7 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
+    start_time = MPI.Wtime()
 
     chunk_size = days // size
     start_day = rank * chunk_size
@@ -78,6 +72,10 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
         if local_results['infected'][day] > max_infected:
             max_infected = local_results['infected'][day]
             max_infected_day = day
+
+    end_time = MPI.Wtime()
+    execution_time = end_time - start_time
+    #print(f"\n Час виконання симуляції з {num_processes} процесами: {execution_time:.4f} секунд")
 
     gathered_results = comm.gather(local_results, root=0)
     gathered_age_deaths = comm.gather(local_age_deaths, root=0)
@@ -198,6 +196,7 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
             file.write("Зменшення смертності:\n")
             file.write(f"  - Завдяки вакцинації: {vaccine_mort_reduction_effect}%\n")
             file.write(f"  - Завдяки карантину: {quarantine_mort_reduction_effect}%\n")
+            file.write(f"\n Час виконання симуляції з {num_processes} процесами: {execution_time:.4f} секунд\n")
 
         return {
             'susceptible': final_susceptible,
@@ -220,3 +219,134 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
         }
     else:
         return None
+
+def serial_simulation(population, beta, gamma, days, vaccine_percent, vaccine_infection_reduction, vaccine_mortality_reduction,
+                      quarantine_percent, quarantine_infection_reduction, quarantine_mortality_reduction):
+    start_time = time.time()
+
+    # Ініціалізація змінних для результатів
+    local_results = {
+        'susceptible': np.zeros(days),
+        'infected': np.zeros(days),
+        'recovered': np.zeros(days),
+        'dead': np.zeros(days),
+        'cumulative_infected': np.zeros(days)
+    }
+
+    local_age_deaths = {
+        'Children': np.zeros(days),
+        'Young Adults': np.zeros(days),
+        'Middle Aged': np.zeros(days),
+        'Senior': np.zeros(days)
+    }
+
+    max_infected = 0
+    max_infected_day = 0
+
+    # Основний цикл симуляції
+    for day in range(days):
+        result = population.simulate_day(
+            beta, gamma, vaccine_percent, vaccine_infection_reduction,
+            vaccine_mortality_reduction, quarantine_percent,
+            quarantine_infection_reduction, quarantine_mortality_reduction
+        )
+
+        # Обробка результатів за кожен день
+        for group, data in result.items():
+            local_results['susceptible'][day] += data['susceptible']
+            local_results['infected'][day] += data['infected']
+            local_results['recovered'][day] += data['recovered']
+            local_results['dead'][day] += data['dead']
+            local_age_deaths[group][day] = data['dead']
+
+        local_results['cumulative_infected'][day] = population.cumulative_infected
+
+        if local_results['infected'][day] > max_infected:
+            max_infected = local_results['infected'][day]
+            max_infected_day = day
+
+
+
+    # Підготовка фінальних результатів для повернення
+    final_susceptible = local_results['susceptible']
+    final_infected = local_results['infected']
+    final_recovered = local_results['recovered']
+    final_dead = local_results['dead']
+    final_cumulative_infected = local_results['cumulative_infected']
+
+    # Збір інформації про смертність за віковими групами
+    final_age_deaths = {
+        'Children': local_age_deaths['Children'],
+        'Young Adults': local_age_deaths['Young Adults'],
+        'Middle Aged': local_age_deaths['Middle Aged'],
+        'Senior': local_age_deaths['Senior']
+    }
+
+    # Підрахунок загальних смертей за статтю
+    children_dead = int(np.round(population.groups['Children']['dead']))
+    young_adults_dead = int(np.round(population.groups['Young Adults']['dead']))
+    middle_aged_dead = int(np.round(population.groups['Middle Aged']['dead']))
+    senior_dead = int(np.round(population.groups['Senior']['dead']))
+
+    final_dead_last = children_dead + young_adults_dead + middle_aged_dead + senior_dead
+
+    # Підготовка результатів для виведення
+    male_dead_total = 0
+    female_dead_total = 0
+
+    children_male_dead, children_female_dead = compute_group_gender_deaths(children_dead, population)
+    young_adults_male_dead, young_adults_female_dead = compute_group_gender_deaths(young_adults_dead, population)
+    middle_aged_male_dead, middle_aged_female_dead = compute_group_gender_deaths(middle_aged_dead, population)
+    senior_male_dead, senior_female_dead = compute_group_gender_deaths(senior_dead, population)
+
+    age_gender_deaths = {
+        'Children': (children_male_dead, children_female_dead),
+        'Young Adults': (young_adults_male_dead, young_adults_female_dead),
+        'Middle Aged': (middle_aged_male_dead, middle_aged_female_dead),
+        'Senior': (senior_male_dead, senior_female_dead)
+    }
+
+    male_dead_total = children_male_dead + young_adults_male_dead + middle_aged_male_dead + senior_male_dead
+    female_dead_total = children_female_dead + young_adults_female_dead + middle_aged_female_dead + senior_female_dead
+
+    # Розрахунок ефективності вакцинації та карантину
+    (vaccine_inf_reduction_effect, vaccine_mort_reduction_effect,
+     quarantine_inf_reduction_effect, quarantine_mort_reduction_effect) = population.calculate_effectiveness(
+        vaccine_percent, quarantine_percent,
+        vaccine_infection_reduction, vaccine_mortality_reduction,
+        quarantine_infection_reduction, quarantine_mortality_reduction
+    )
+
+    # Підрахунок середньої тривалості інфекції
+    durations = population.average_infection_duration(
+        gamma,
+        vaccine_percent, vaccine_mortality_reduction,
+        quarantine_percent, quarantine_mortality_reduction
+    )
+
+    vaccinated = int(np.round(population.total_population * vaccine_percent / 100))
+    quarantined = int(np.round(population.total_population * quarantine_percent / 100))
+
+        # Підрахунок максимального числа інфікованих та часу виконання
+    end_time = time.time()
+    execution_time = end_time - start_time
+    #print(f"\n Час виконання серійної симуляції: {execution_time:.4f} секунд")
+
+    return {
+        'susceptible': final_susceptible,
+        'infected': final_infected,
+        'recovered': final_recovered,
+        'dead': final_dead,
+        'age_deaths': final_age_deaths,
+        'cumulative_infected': final_cumulative_infected,
+        'gender_deaths': (male_dead_total, female_dead_total),
+        'age_gender_deaths': age_gender_deaths,
+        'vaccine_quarantine_effects': (
+            vaccine_inf_reduction_effect,
+            vaccine_mort_reduction_effect,
+            quarantine_inf_reduction_effect,
+            quarantine_mort_reduction_effect
+        ),
+        'infection_durations': durations,
+        'peak': (max_infected, max_infected_day)
+    }
