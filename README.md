@@ -88,8 +88,6 @@ eepidemic-simulation/
 └── run_simulation.py       # точка входу для GUI-додатку
 ```
 
-## - [Як користуватись програмою (USAGE.md)](docs/USAGE.md)
-
 ## Ліцензія
 
 Цей проєкт ліцензовано за умовами MIT License. Докладніше — у файлі [LICENSE](LICENSE).
