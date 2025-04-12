@@ -70,16 +70,22 @@
 ## Структура файлів
 
 ```
-epidemic-simulation/
-├── README.md               # Документація проєкту
-├── requirements.txt        # Залежності Python
-├── run_simulation.py       # Точка входу для GUI-додатку
-├── ui.py                   # Визначення GUI на Tkinter
-├── simulation.py           # Логіка паралельної симуляції
-├── model.py                # Модель населення та обчислення параметрів
-├── visualisation.py        # Функції побудови графіків (Matplotlib)
-├── save_results.py         # Генерація PDF-звітів (ReportLab)
-└── data/                   # (Опційно) Вхідні/вихідні дані
+eepidemic-simulation/
+├── docs/                   # документація та інші довідкові матеріали
+├── data/                   # вхідні/вихідні дані (наприклад, `calculate_factors.txt`, `simulation_parameter.txt`, `charts_report.pdf` тощо)
+├── fonts/                  # шрифти (наприклад, `Royal_Arial.ttf`)
+├── src/                    # вихідний код
+│   ├── __pycache__/        # кешовані Python файли
+│   ├── __init__.py
+│   ├── model.py
+│   ├── save_results.py
+│   ├── simulation.py
+│   ├── ui.py
+│   └── visualisation.py
+├── temp/                   # тимчасові файли та результати (графіки, текстові звіти тощо)
+├── README.md               # документація проєкту
+├── requirements.txt        # залежності Python
+└── run_simulation.py       # точка входу для GUI-додатку
 ```
 
 ## Участь у розробці
