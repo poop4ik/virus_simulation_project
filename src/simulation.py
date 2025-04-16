@@ -75,7 +75,6 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
 
     end_time = MPI.Wtime()
     execution_time = end_time - start_time
-    #print(f"\n Час виконання симуляції з {num_processes} процесами: {execution_time:.4f} секунд")
 
     gathered_results = comm.gather(local_results, root=0)
     gathered_age_deaths = comm.gather(local_age_deaths, root=0)
@@ -104,7 +103,7 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
         for age_deaths in gathered_age_deaths:
             for group in final_age_deaths:
                 final_age_deaths[group] += age_deaths[group]
-
+        
         final_susceptible_last = int(np.round(final_susceptible[-1]))
         final_infected_last = int(np.round(final_infected[-1]))
         final_recovered_last = int(np.round(final_recovered[-1]))
@@ -196,7 +195,7 @@ def parallel_simulation(population, beta, gamma, days, num_processes,
             file.write("Зменшення смертності:\n")
             file.write(f"  - Завдяки вакцинації: {vaccine_mort_reduction_effect}%\n")
             file.write(f"  - Завдяки карантину: {quarantine_mort_reduction_effect}%\n")
-            file.write(f"\n Час виконання симуляції з {num_processes} процесами: {execution_time:.4f} секунд\n")
+            file.write(f"\nЧас виконання симуляції з {num_processes} процесами: {execution_time:.4f} секунд\n")
 
         return {
             'susceptible': final_susceptible,

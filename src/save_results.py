@@ -102,12 +102,12 @@ def save_results_to_pdf():
         },
         "vaccine_quarantine_effects.png": {
             "title": "Ефект вакцинації та карантину",
-            "section": (
+            "section": list(dict.fromkeys(
                 [ln.rstrip() for ln in lines
                  if ln.startswith("Вакциновано") or ln.startswith("Під карантином")]
                 + _extract_section(lines, "Зменшення інфікування:")
                 + _extract_section(lines, "Зменшення смертності:")
-            )
+            ))
         },
         "cumulative_infected.png": {
             "title": "Кумулятивна кількість інфікованих",

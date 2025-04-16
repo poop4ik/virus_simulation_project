@@ -53,13 +53,17 @@ class Population:
             }
         }
         
-        eligible_groups = [group for group in self.groups if self.groups[group]["susceptible"] > 0]
+        initial_infected = 10 
 
-        if eligible_groups:
-            chosen_group = random.choice(eligible_groups)
-            self.groups[chosen_group]["infected"] = 1
-            self.groups[chosen_group]["susceptible"] -= 1
-            self.cumulative_infected += 1
+        for _ in range(initial_infected):
+            eligible_groups = [group for group in self.groups if self.groups[group]["susceptible"] > 0]
+
+            if eligible_groups:
+                chosen_group = random.choice(eligible_groups)
+                self.groups[chosen_group]["infected"] += 1  # додаємо одного інфікованого до групи
+                self.groups[chosen_group]["susceptible"] -= 1  # зменшуємо кількість сприйнятливих
+                self.cumulative_infected += 1  # рахуємо загальну кількість інфікованих
+
 
     def simulate_day(self, beta, gamma, vaccine_percent, vaccine_infection_reduction, vaccine_mortality_reduction,
                      quarantine_percent, quarantine_infection_reduction, quarantine_mortality_reduction):

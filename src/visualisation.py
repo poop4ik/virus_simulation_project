@@ -184,3 +184,4 @@ def plot_infection_durations(durations: dict):
         plt.tight_layout()
     finally:
         _save_and_close("infection_durations.png")
+

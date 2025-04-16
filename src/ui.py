@@ -41,8 +41,8 @@ class SimulationApp:
             widget.destroy()
 
         # Встановлюємо розмір і центруємо
-        self.root.geometry("400x300")
-        self.center_window(self.root, 400, 300)
+        self.root.geometry("400x350")  # Трохи збільшуємо розмір вікна для нової кнопки
+        self.center_window(self.root, 400, 350)
 
         # Контейнер для всіх елементів
         main_frame = tk.Frame(self.root, bg="#f4f4f4")
@@ -90,6 +90,236 @@ class SimulationApp:
             font=("Arial", 12)
         )
         btn4.grid(row=4, column=0, sticky="we", pady=10)
+
+        # Нова кнопка для готових сценаріїв
+        btn5 = tk.Button(
+            main_frame,
+            text="Готові сценарії",
+            command=self.show_template_scenarios,
+            font=("Arial", 12)
+        )
+        btn5.grid(row=5, column=0, sticky="we", pady=10)
+
+    def show_template_scenarios(self):
+        # Очищаємо всі віджети
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+        # Встановлюємо розмір і центруємо
+        self.root.geometry("500x400")
+        self.center_window(self.root, 500, 400)
+
+        # Контейнер для всіх елементів
+        main_frame = tk.Frame(self.root, bg="#f4f4f4")
+        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        main_frame.grid_columnconfigure(0, weight=1)
+
+        # Заголовок
+        lbl = tk.Label(
+            main_frame,
+            text="Оберіть готовий сценарій епідемії:",
+            font=("Arial", 14),
+            bg="#f4f4f4"
+        )
+        lbl.grid(row=0, column=0, sticky="we", pady=(0, 20))
+
+        # Кнопки для різних сценаріїв
+        btn1 = tk.Button(
+            main_frame,
+            text="COVID-19 (Коронавірус SARS-CoV-2)",
+            command=lambda: self.load_template_scenario("covid19"),
+            font=("Arial", 12)
+        )
+        btn1.grid(row=1, column=0, sticky="we", pady=10)
+
+        btn2 = tk.Button(
+            main_frame,
+            text="Грип (сезонний)",
+            command=lambda: self.load_template_scenario("flu"),
+            font=("Arial", 12)
+        )
+        btn2.grid(row=2, column=0, sticky="we", pady=10)
+
+        btn3 = tk.Button(
+            main_frame,
+            text="Ебола",
+            command=lambda: self.load_template_scenario("ebola"),
+            font=("Arial", 12)
+        )
+        btn3.grid(row=3, column=0, sticky="we", pady=10)
+
+        # Кнопка назад
+        btn_back = tk.Button(
+            main_frame,
+            text="Назад",
+            command=self.show_main_menu,
+            font=("Arial", 12)
+        )
+        btn_back.grid(row=4, column=0, sticky="we", pady=30)
+
+    def load_template_scenario(self, scenario_name):
+        # Визначення параметрів для різних сценаріїв
+        scenarios = {
+            "covid19": {
+                "name": "COVID-19_Епідемія",
+                "population": "10000",
+                "male": "49",                   # % чоловіків
+                "female": "51",                 # % жінок
+                "children": "20",               # % дітей
+                "young_adults": "30",           # % молодих дорослих
+                "middle_age": "30",             # % осіб середнього віку
+                "senior": "20",                 # % літніх
+                "beta": "0.3",                  # коефіцієнт зараження: забезпечує R₀ ≈ 3 (при γ = 0.1)
+                "gamma": "0.1",                 # швидкість одужання (~10 днів)
+                "days": "200",                  # тривалість симуляції
+                "death_rate_children": "0.01",  # летальність для дітей ≈0.01%
+                "death_rate_young_adults": "0.1", # летальність для молодих ≈0.1%
+                "death_rate_middle_age": "1",   # летальність для осіб середнього віку ≈1%
+                "death_rate_senior": "10",      # летальність для літніх ≈10%
+                "male_mortality": "55",         # % смертей серед чоловіків
+                "female_mortality": "45",       # % смертей серед жінок
+                "vaccine_percent": "0",         # відсутність вакцинації
+                "quarantine_percent": "0",      # відсутність карантину
+                "vaccine_infection_reduction": "0",
+                "vaccine_mortality_reduction": "0",
+                "quarantine_infection_reduction": "0",
+                "quarantine_mortality_reduction": "0"
+            },
+            "flu": {
+                "name": "Сезонний_Грип_Епідемія",
+                "population": "10000",
+                "male": "49",
+                "female": "51",
+                "children": "20",
+                "young_adults": "30",
+                "middle_age": "30",
+                "senior": "20",
+                "beta": "0.26",                 # підвищено до 0.26: R₀ ≈ 1.3 (при γ = 0.2)
+                "gamma": "0.2",                 # одужання ~5 днів
+                "days": "100",
+                "death_rate_children": "0.001", # летальність для дітей ≈0.001%
+                "death_rate_young_adults": "0.01",# летальність для молодих ≈0.01%
+                "death_rate_middle_age": "0.05",  # летальність для середнього віку ≈0.05%
+                "death_rate_senior": "0.5",       # летальність для літніх ≈0.5%
+                "male_mortality": "50",
+                "female_mortality": "50",
+                "vaccine_percent": "0",
+                "quarantine_percent": "0",
+                "vaccine_infection_reduction": "0",
+                "vaccine_mortality_reduction": "0",
+                "quarantine_infection_reduction": "0",
+                "quarantine_mortality_reduction": "0"
+            },
+            "ebola": {
+                "name": "Ебола_Епідемія",
+                "population": "10000",
+                "male": "49",
+                "female": "51",
+                "children": "20",
+                "young_adults": "30",
+                "middle_age": "30",
+                "senior": "20",
+                "beta": "0.3",                # зменшено трохи до 0.14: R₀ ≈ 2 (при γ = 0.071)
+                "gamma": "0.071",              # одужання ~14 днів
+                "days": "150",
+                "death_rate_children": "5",   # високий відсоток смертності: ≈50% для дітей
+                "death_rate_young_adults": "6", # ≈60% для молодих
+                "death_rate_middle_age": "7",   # ≈70% для осіб середнього віку
+                "death_rate_senior": "8",       # ≈80% для літніх (можна варіювати до 85% залежно від спалаху)
+                "male_mortality": "50",
+                "female_mortality": "50",
+                "vaccine_percent": "0",
+                "quarantine_percent": "0",
+                "vaccine_infection_reduction": "0",
+                "vaccine_mortality_reduction": "0",
+                "quarantine_infection_reduction": "0",
+                "quarantine_mortality_reduction": "0"
+            }
+        }
+
+        
+
+        # Перевірка чи існує сценарій
+        if scenario_name not in scenarios:
+            messagebox.showerror("Помилка", f"Сценарій {scenario_name} не знайдено!")
+            return
+
+        # Завантажуємо форму симуляції
+        self.show_simulation_settings()
+
+        # Заповнюємо поля значеннями з обраного сценарію
+        scenario = scenarios[scenario_name]
+
+        self.experiment_name_entry.delete(0, tk.END)
+        self.experiment_name_entry.insert(0, scenario["name"])
+
+        self.population_entry.delete(0, tk.END)
+        self.population_entry.insert(0, scenario["population"])
+
+        self.male_entry.delete(0, tk.END)
+        self.male_entry.insert(0, scenario["male"])
+
+        self.female_entry.delete(0, tk.END)
+        self.female_entry.insert(0, scenario["female"])
+
+        self.children_entry.delete(0, tk.END)
+        self.children_entry.insert(0, scenario["children"])
+
+        self.young_adults_entry.delete(0, tk.END)
+        self.young_adults_entry.insert(0, scenario["young_adults"])
+
+        self.middle_age_entry.delete(0, tk.END)
+        self.middle_age_entry.insert(0, scenario["middle_age"])
+
+        self.senior_entry.delete(0, tk.END)
+        self.senior_entry.insert(0, scenario["senior"])
+
+        self.beta_entry.delete(0, tk.END)
+        self.beta_entry.insert(0, scenario["beta"])
+
+        self.gamma_entry.delete(0, tk.END)
+        self.gamma_entry.insert(0, scenario["gamma"])
+
+        self.days_entry.delete(0, tk.END)
+        self.days_entry.insert(0, scenario["days"])
+
+        self.death_rate_children_entry.delete(0, tk.END)
+        self.death_rate_children_entry.insert(0, scenario["death_rate_children"])
+
+        self.death_rate_young_adults_entry.delete(0, tk.END)
+        self.death_rate_young_adults_entry.insert(0, scenario["death_rate_young_adults"])
+
+        self.death_rate_middle_age_entry.delete(0, tk.END)
+        self.death_rate_middle_age_entry.insert(0, scenario["death_rate_middle_age"])
+
+        self.death_rate_senior_entry.delete(0, tk.END)
+        self.death_rate_senior_entry.insert(0, scenario["death_rate_senior"])
+
+        self.male_mortality_entry.delete(0, tk.END)
+        self.male_mortality_entry.insert(0, scenario["male_mortality"])
+
+        self.female_mortality_entry.delete(0, tk.END)
+        self.female_mortality_entry.insert(0, scenario["female_mortality"])
+
+        self.vaccine_percent_entry.delete(0, tk.END)
+        self.vaccine_percent_entry.insert(0, scenario["vaccine_percent"])
+
+        self.quarantine_percent_entry.delete(0, tk.END)
+        self.quarantine_percent_entry.insert(0, scenario["quarantine_percent"])
+
+        self.vaccine_infection_reduction_entry.delete(0, tk.END)
+        self.vaccine_infection_reduction_entry.insert(0, scenario["vaccine_infection_reduction"])
+
+        self.vaccine_mortality_reduction_entry.delete(0, tk.END)
+        self.vaccine_mortality_reduction_entry.insert(0, scenario["vaccine_mortality_reduction"])
+
+        self.quarantine_infection_reduction_entry.delete(0, tk.END)
+        self.quarantine_infection_reduction_entry.insert(0, scenario["quarantine_infection_reduction"])
+
+        self.quarantine_mortality_reduction_entry.delete(0, tk.END)
+        self.quarantine_mortality_reduction_entry.insert(0, scenario["quarantine_mortality_reduction"])
+
+        messagebox.showinfo("Сценарій завантажено", f"Сценарій {scenario['name']} успішно завантажено.")
 
     def show_simulation_settings(self):
         for widget in self.root.winfo_children():
@@ -262,7 +492,7 @@ class SimulationApp:
         parameters_txt_path = os.path.join(RESULTS_DIR, "simulation_parameters.txt")
 
         with open(parameters_txt_path, "w", encoding="utf-8") as f:
-         f.write(f"Назва експерименту: {self.experiment_name_entry.get()}\n")
+         f.write(f"{self.experiment_name_entry.get()}\n")
          f.write(f"Популяція: {self.population_entry.get()}\n")
          f.write(f"% чоловіків: {self.male_entry.get()}\n")
          f.write(f"% жінок: {self.female_entry.get()}\n")
@@ -380,66 +610,97 @@ class SimulationApp:
         if not self.validate_parameters_for_calculate():
             return
 
+        def get_or_empty(entry):
+            try:
+                value = entry.get()
+                return float(value) if value else ""
+            except:
+                return ""
+
         try:
-            population = float(self.population_entry.get())
-            male = float(self.male_population_entry.get())
-            female = float(self.female_population_entry.get())
-
-            children = float(self.children_population_entry.get())
-            youth = float(self.youth_population_entry.get())
-            middle = float(self.middle_population_entry.get())
-            senior = float(self.senior_population_entry.get())
-
-            infected_children = float(self.infected_children_entry.get())
-            infected_youth = float(self.infected_youth_entry.get())
-            infected_middle = float(self.infected_middle_entry.get())
-            infected_senior = float(self.infected_senior_entry.get())
-
-            death_children = float(self.death_children_entry.get())
-            death_youth = float(self.death_youth_entry.get())
-            death_middle = float(self.death_middle_entry.get())
-            death_senior = float(self.death_senior_entry.get())
-
-            infected_male = float(self.infected_male_entry.get())
-            infected_female = float(self.infected_female_entry.get())
-            death_male = float(self.male_death_entry.get())
-            death_female = float(self.female_death_entry.get())
-
-            male_percent = round((male / population) * 100, 2)
-            female_percent = round((female / population) * 100, 2)
-
-            children_percent = round((children / population) * 100, 2)
-            youth_percent = round((youth / population) * 100, 2)
-            middle_percent = round((middle / population) * 100, 2)
-            senior_percent = round((senior / population) * 100, 2)
-
-            death_rate_children = round((death_children / infected_children) * 100, 2) if infected_children > 0 else 0
-            death_rate_youth = round((death_youth / infected_youth) * 100, 2) if infected_youth > 0 else 0
-            death_rate_middle = round((death_middle / infected_middle) * 100, 2) if infected_middle > 0 else 0
-            death_rate_senior = round((death_senior / infected_senior) * 100, 2) if infected_senior > 0 else 0
-
-            total_deaths = death_children + death_youth + death_middle + death_senior
-            male_mortality = round((death_male / total_deaths) * 100, 2) if total_deaths > 0 else 0
-            female_mortality = round((death_female / total_deaths) * 100, 2) if total_deaths > 0 else 0
-
+            population = get_or_empty(self.population_entry)
+            male = get_or_empty(self.male_population_entry)
+            female = get_or_empty(self.female_population_entry)
+    
+            children = get_or_empty(self.children_population_entry)
+            youth = get_or_empty(self.youth_population_entry)
+            middle = get_or_empty(self.middle_population_entry)
+            senior = get_or_empty(self.senior_population_entry)
+    
+            infected_children = get_or_empty(self.infected_children_entry)
+            infected_youth = get_or_empty(self.infected_youth_entry)
+            infected_middle = get_or_empty(self.infected_middle_entry)
+            infected_senior = get_or_empty(self.infected_senior_entry)
+    
+            death_children = get_or_empty(self.death_children_entry)
+            death_youth = get_or_empty(self.death_youth_entry)
+            death_middle = get_or_empty(self.death_middle_entry)
+            death_senior = get_or_empty(self.death_senior_entry)
+    
+            infected_male = get_or_empty(self.infected_male_entry)
+            infected_female = get_or_empty(self.infected_female_entry)
+            death_male = get_or_empty(self.male_death_entry)
+            death_female = get_or_empty(self.female_death_entry)
+    
+            beta = getattr(self, "beta", "")  # коеф. зараження (β)
+            gamma = getattr(self, "gamma", "")  # коеф. одужання (γ)
+            days = getattr(self, "days", "")  # кількість днів
+            vaccination = getattr(self, "vaccination", "")
+            quarantine = getattr(self, "quarantine", "")
+            vac_inf_red = getattr(self, "vac_infection_reduction", "")
+            vac_death_red = getattr(self, "vac_death_reduction", "")
+            quar_inf_red = getattr(self, "quar_infection_reduction", "")
+            quar_death_red = getattr(self, "quar_death_reduction", "")
+    
+            # Обчислення процентів, якщо можливе
+            def percent(part, total):
+                return round((part / total) * 100, 2) if isinstance(part, float) and isinstance(total, float) and total > 0 else ""
+    
+            male_percent = percent(male, population)
+            female_percent = percent(female, population)
+            children_percent = percent(children, population)
+            youth_percent = percent(youth, population)
+            middle_percent = percent(middle, population)
+            senior_percent = percent(senior, population)
+    
+            death_rate_children = percent(death_children, infected_children)
+            death_rate_youth = percent(death_youth, infected_youth)
+            death_rate_middle = percent(death_middle, infected_middle)
+            death_rate_senior = percent(death_senior, infected_senior)
+    
+            total_deaths = sum(v for v in [death_children, death_youth, death_middle, death_senior] if isinstance(v, float))
+            male_mortality = percent(death_male, total_deaths)
+            female_mortality = percent(death_female, total_deaths)
+    
+            # Запис у файл
             output_file = "temp/calculate_parameters.txt"
             with open(output_file, "w", encoding="utf-8") as f:
-                f.write(f"Популяція: {population}\n")
-                f.write(f"% чоловіків: {male_percent}%\n")
-                f.write(f"% жінок: {female_percent}%\n")
-                f.write(f"% дітей (0–14 років): {children_percent}%\n")
-                f.write(f"% молодь (15–34 років): {youth_percent}%\n")
-                f.write(f"% середній вік (35–64): {middle_percent}%\n")
-                f.write(f"% похилі (65+): {senior_percent}%\n")
-                f.write(f"Летальність дітей (%): {death_rate_children}%\n")
-                f.write(f"Летальність молодих (%): {death_rate_youth}%\n")
-                f.write(f"Летальність середнього віку (%): {death_rate_middle}%\n")
-                f.write(f"Летальність похилого віку (%): {death_rate_senior}%\n")
-                f.write(f"Смертність чоловіків (%): {male_mortality}%\n")
-                f.write(f"Смертність жінок (%): {female_mortality}%\n")
-
-            messagebox.showinfo("Успіх", f"Параметри успішно обчислено")
-
+                f.write(f"Test_Infection_X\n")
+                f.write(f"Популяція: {int(population)}\n")
+                f.write(f"% чоловіків: {male_percent}\n")
+                f.write(f"% жінок: {female_percent}\n")
+                f.write(f"% дітей (0–14 років): {children_percent}\n")
+                f.write(f"% молодь (15–34 років): {youth_percent}\n")
+                f.write(f"% середній вік (35–64): {middle_percent}\n")
+                f.write(f"% похилі (65+): {senior_percent}\n")
+                f.write(f"Коеф. зараження (β): {beta}\n")
+                f.write(f"Коеф. одужання (γ): {gamma}\n")
+                f.write(f"Кількість днів: {days}\n")
+                f.write(f"Летальність дітей (%): {death_rate_children}\n")
+                f.write(f"Летальність молодих (%): {death_rate_youth}\n")
+                f.write(f"Летальність середнього віку (%): {death_rate_middle}\n")
+                f.write(f"Летальність похилого віку (%): {death_rate_senior}\n")
+                f.write(f"Смертність чоловіків (%): {male_mortality}\n")
+                f.write(f"Смертність жінок (%): {female_mortality}\n")
+                f.write(f"Вакцинація (%): {vaccination}\n")
+                f.write(f"Карантин (%): {quarantine}\n")
+                f.write(f"↓ інфікування вакциною (%): {vac_inf_red}\n")
+                f.write(f"↓ смертність вакциною (%): {vac_death_red}\n")
+                f.write(f"↓ інфікування карантином (%): {quar_inf_red}\n")
+                f.write(f"↓ смертність карантином (%): {quar_death_red}\n")
+    
+            messagebox.showinfo("Успіх", f"Параметри успішно збережено")
+    
         except Exception as e:
             messagebox.showerror("Помилка", f"Помилка при обчисленні параметрів:\n{e}")
 
@@ -536,84 +797,51 @@ class SimulationApp:
                 with open(file_path, "r", encoding="utf-8") as f:
                     lines = f.readlines()
 
-                def extract_number(line):
-                    match = re.search(r"\d+(\.\d+)?", line)
-                    return match.group(0) if match else None
+                def extract_number_or_zero(line):
+                    matches = re.findall(r"\d+(?:\.\d+)?", line)
+                    return matches[-1] if matches else "0"
+
 
                 self.show_simulation_settings()
 
+                # Перше поле – текст
                 self.experiment_name_entry.delete(0, tk.END)
                 self.experiment_name_entry.insert(0, lines[0].strip())
 
-                self.population_entry.delete(0, tk.END)
-                self.population_entry.insert(0, extract_number(lines[1])) 
+                # Всі інші – числа або 0
+                entries = [
+                    self.population_entry,
+                    self.male_entry,
+                    self.female_entry,
+                    self.children_entry,
+                    self.young_adults_entry,
+                    self.middle_age_entry,
+                    self.senior_entry,
+                    self.beta_entry,
+                    self.gamma_entry,
+                    self.days_entry,
+                    self.death_rate_children_entry,
+                    self.death_rate_young_adults_entry,
+                    self.death_rate_middle_age_entry,
+                    self.death_rate_senior_entry,
+                    self.male_mortality_entry,
+                    self.female_mortality_entry,
+                    self.vaccine_percent_entry,
+                    self.quarantine_percent_entry,
+                    self.vaccine_infection_reduction_entry,
+                    self.vaccine_mortality_reduction_entry,
+                    self.quarantine_infection_reduction_entry,
+                    self.quarantine_mortality_reduction_entry
+                ]
 
-                self.male_entry.delete(0, tk.END)
-                self.male_entry.insert(0, extract_number(lines[2]))
-
-                self.female_entry.delete(0, tk.END)
-                self.female_entry.insert(0, extract_number(lines[3]))
-
-                self.children_entry.delete(0, tk.END)
-                self.children_entry.insert(0, extract_number(lines[4]))
-
-                self.young_adults_entry.delete(0, tk.END)
-                self.young_adults_entry.insert(0, extract_number(lines[5]))
-
-                self.middle_age_entry.delete(0, tk.END)
-                self.middle_age_entry.insert(0, extract_number(lines[6]))
-
-                self.senior_entry.delete(0, tk.END)
-                self.senior_entry.insert(0, extract_number(lines[7]))
-
-                self.beta_entry.delete(0, tk.END)
-                self.beta_entry.insert(0, extract_number(lines[8]))
-
-                self.gamma_entry.delete(0, tk.END)
-                self.gamma_entry.insert(0, extract_number(lines[9]))
-
-                self.days_entry.delete(0, tk.END)
-                self.days_entry.insert(0, extract_number(lines[10]))
-
-                self.death_rate_children_entry.delete(0, tk.END)
-                self.death_rate_children_entry.insert(0, extract_number(lines[11]))
-
-                self.death_rate_young_adults_entry.delete(0, tk.END)
-                self.death_rate_young_adults_entry.insert(0, extract_number(lines[12]))
-
-                self.death_rate_middle_age_entry.delete(0, tk.END)
-                self.death_rate_middle_age_entry.insert(0, extract_number(lines[13]))
-
-                self.death_rate_senior_entry.delete(0, tk.END)
-                self.death_rate_senior_entry.insert(0, extract_number(lines[14]))
-
-                self.male_mortality_entry.delete(0, tk.END)
-                self.male_mortality_entry.insert(0, extract_number(lines[15]))
-
-                self.female_mortality_entry.delete(0, tk.END)
-                self.female_mortality_entry.insert(0, extract_number(lines[16]))
-
-                self.vaccine_percent_entry.delete(0, tk.END)
-                self.vaccine_percent_entry.insert(0, extract_number(lines[17]))
-
-                self.quarantine_percent_entry.delete(0, tk.END)
-                self.quarantine_percent_entry.insert(0, extract_number(lines[18]))
-
-                self.vaccine_infection_reduction_entry.delete(0, tk.END)
-                self.vaccine_infection_reduction_entry.insert(0, extract_number(lines[19]))
-
-                self.vaccine_mortality_reduction_entry.delete(0, tk.END)
-                self.vaccine_mortality_reduction_entry.insert(0, extract_number(lines[20]))
-
-                self.quarantine_infection_reduction_entry.delete(0, tk.END)
-                self.quarantine_infection_reduction_entry.insert(0, extract_number(lines[21]))
-
-                self.quarantine_mortality_reduction_entry.delete(0, tk.END)
-                self.quarantine_mortality_reduction_entry.insert(0, extract_number(lines[22]))
+                for i, entry in enumerate(entries, start=1):
+                    entry.delete(0, tk.END)
+                    entry.insert(0, extract_number_or_zero(lines[i]))
 
                 messagebox.showinfo("Завантажено", "Параметри симуляції успішно завантажені")
             else:
                 messagebox.showerror("Помилка", "Файл з параметрами не знайдено або він не коректний!")
+
 
     def validate_parameters(self):
         male_percent = self.male_entry.get()
